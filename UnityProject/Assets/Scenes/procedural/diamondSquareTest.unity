@@ -163,8 +163,9 @@ GameObject:
   m_Component:
   - component: {fileID: 900548084}
   - component: {fileID: 900548083}
+  - component: {fileID: 900548086}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: LandscapeGenerator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -181,12 +182,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd7cb44bddf144f4ba87f11c5c212c20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  step: 0
-  iterationCount: 6
+  iterationCount: 7
   heightInterval:
-    _min: -100
-    _max: 100
-  prefab: {fileID: 1011483497664754, guid: 5a887ca5248cbf14ab17578d8c53ec4a, type: 2}
+    _min: -1
+    _max: 1
 --- !u!4 &900548084
 Transform:
   m_ObjectHideFlags: 0
@@ -200,6 +199,37 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &900548086
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 900548082}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_Materials:
+  - {fileID: 2100000, guid: 0dfbb7df15003d842b1f7f8f4b86583d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
 --- !u!1001 &1307306810
 Prefab:
   m_ObjectHideFlags: 0
