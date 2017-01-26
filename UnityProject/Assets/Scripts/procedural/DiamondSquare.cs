@@ -44,7 +44,7 @@ public class DiamondSquare : MonoBehaviour {
 
 	    GenerateVertices();
 	    GenerateIndexes();
-	    GenerateVertexNormals();
+	    mesh.RecalculateNormals();
 	}
 
     void GenerateVertices()
@@ -138,87 +138,16 @@ public class DiamondSquare : MonoBehaviour {
                 indexes[count + 5] = y * matrixSize + x + 1;
 
                 count += 6;
-
-                GenerateFaceNormal(vertices[y * matrixSize + x],
-                                   vertices[(y + 1) * matrixSize + x],
-                                   vertices[(y + 1) * matrixSize + x + 1],
-                                   x, y);
             }
         }
 
         mesh.triangles = indexes;
     }
 
-    void GenerateFaceNormal(Vector3 p1, Vector3 p2, Vector3 p3, int x, int y)
-    {
-        faceNormals[y * matrixSize + x] = Vector3.Cross(p1 - p2, p3 - p2).normalized;
-    }
-
-    void GenerateVertexNormals()
-    {
-        for (int y = 0; y < matrixSize; y++)
-        {
-            for (int x = 0; x < matrixSize; x++)
-            {
-                int count = 0;
-                Vector3 sum = new Vector3(0.0f, 0.0f, 0.0f);
-                if (isPointInsideMatrix(x - 1, y))
-                {
-                    sum += getFaceNormal(x - 1, y);
-                    count++;
-                }
-
-                if (isPointInsideMatrix(x + 1, y))
-                {
-                    sum += getFaceNormal(x + 1, y);
-                    count++;
-                }
-
-                if (isPointInsideMatrix(x, y - 1))
-                {
-                    sum += getFaceNormal(x, y - 1);
-                    count++;
-                }
-
-                if (isPointInsideMatrix(x, y - 1))
-                {
-                    sum += getFaceNormal(x, y - 1);
-                    count++;
-                }
-
-                Vector3 average = -(sum / count).normalized;
-                
-                normals[y * matrixSize + x] = average;
-
-                if (isPointInsideMatrix(x, y + 1))
-                    normals[(y + 1) * matrixSize + x] = average;
-
-                if (isPointInsideMatrix(x + 1, y + 1))
-                    normals[(y + 1) * matrixSize + x + 1] = average;
-
-                if (isPointInsideMatrix(x, y + 1))
-                    normals[y * matrixSize + x + 1] = average;
-            }
-        }
-
-        mesh.normals = normals;
-    }
-
-    bool isPointInsideMatrix(int x, int y)
-    {
-        return x >= 0 && x < matrixSize && y >= 0 && y < matrixSize;
-    }
-
     // Returns the height at the given coordinates
     float getHeight(int x, int y)
     {
         return vertices[y * matrixSize + x].y;
-    }
-
-    // Returns the normal of the face at the given coordinates
-    Vector3 getFaceNormal(int x, int y)
-    {
-        return faceNormals[y * matrixSize + x];
     }
 
     // Set the height of a vertex at a given coordinate
