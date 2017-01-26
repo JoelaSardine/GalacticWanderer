@@ -16,12 +16,6 @@ public class DiamondSquare : MonoBehaviour {
     // Generated vertices
     private Vector3[] vertices;
 
-    // Generated normals
-    private Vector3[] normals;
-
-    // Generated normals for each square of the map
-    private Vector3[] faceNormals;
-
     // Generated indexes
     private int[] indexes;
 
@@ -39,8 +33,6 @@ public class DiamondSquare : MonoBehaviour {
 
         vertices = new Vector3[matrixSize * matrixSize];
 	    indexes = new int[matrixSize * matrixSize * 6];
-	    normals = new Vector3[matrixSize * matrixSize];
-	    faceNormals = new Vector3[matrixSize * matrixSize];
 
 	    GenerateVertices();
 	    GenerateIndexes();
