@@ -25,13 +25,12 @@ public class Landscape : MonoBehaviour
     // Set to true to have in-editor simulation
     public bool activatedInEditor;
 
-
-
     private int vertexW;
     private int vertexH;
     private int vertexPerLine;
 
-    private Mesh mesh;
+    [HideInInspector]
+    public Mesh mesh;
 
     // Generated vertices
     private Vector3[] vertices;
@@ -41,27 +40,39 @@ public class Landscape : MonoBehaviour
 
     private FastNoise noise;
 
+    private bool isReady;
+
 	void Start ()
 	{
-	    int lodFactor = GetLODFactor();
-
-	    vertexPerLine = (vertexPerSide - 1) / lodFactor + 1;
-
-	    vertexH = vertexPerLine;
-	    vertexW = vertexPerLine;
-
-	    noise = new FastNoise(seed);
-	    noise.SetNoiseType(noiseType);
-
-	    InitMeshFilterComponent();
-
-	    if (mesh == null)
-	        return;
-
-	    GenerateVertices();
-	    GenerateIndexes();
-        mesh.RecalculateNormals();
+	    if (!isReady)
+	    {
+	        Generate();
+	    }
 	}
+
+    public void Generate()
+    {
+        int lodFactor = GetLODFactor();
+
+        vertexPerLine = (vertexPerSide - 1) / lodFactor + 1;
+
+        vertexH = vertexPerLine;
+        vertexW = vertexPerLine;
+
+        noise = new FastNoise(seed);
+        noise.SetNoiseType(noiseType);
+
+        InitMeshFilterComponent();
+
+        if (mesh == null)
+            return;
+
+        GenerateVertices();
+        GenerateIndexes();
+        mesh.RecalculateNormals();
+
+        isReady = true;
+    }
 
     void InitMeshFilterComponent()
     {
@@ -79,6 +90,7 @@ public class Landscape : MonoBehaviour
 
     void OnValidate()
     {
+        isReady = false;
         if (activatedInEditor)
         {
             Start();
@@ -119,7 +131,7 @@ public class Landscape : MonoBehaviour
             {
                 float x = currentWidth / (float) vertexW * size;
                 float y = currentHeight / (float)vertexH * size;
-                float altitude = heightInterval.Lerp(noise.GetNoise(x, y));
+                float altitude = heightInterval.Lerp(noise.GetNoise(transform.position.x - size / 2.0f + x, transform.position.z - size / 2.0f + y));
                 vertices[currentHeight * vertexW + currentWidth].Set(x, altitude, y);
             }
         }
