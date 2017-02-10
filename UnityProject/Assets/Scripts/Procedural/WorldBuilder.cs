@@ -29,21 +29,8 @@ public class WorldBuilder : MonoBehaviour
 	                landscapeArray[y * size + x] = landscape;
 	                landscape.size = chunkSize;
 
-
-                    // There is a little delta between theorical
-	                // chunk size and real chunk size, we need to compute
-	                // the real size since size will affect location and
-	                // landscape generation.
-	                if (x == 0 && y == 0)
-	                {
-	                    landscape.Generate();
-	                    trueChunkSize = landscape.mesh.bounds.size.x;
-	                }
-	                else
-	                {
-    	                landscapeGo.transform.position = new Vector3(x * trueChunkSize, 0, y * trueChunkSize);
-	                    landscape.Generate();
-	                }
+                    landscapeGo.transform.position = new Vector3(x * chunkSize, 0, y * chunkSize);
+                    landscape.Generate();
 	            }
 	        }
 	    }

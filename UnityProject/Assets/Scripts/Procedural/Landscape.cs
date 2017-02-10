@@ -129,8 +129,8 @@ public class Landscape : MonoBehaviour
         {
             for (int currentWidth = 0; currentWidth < vertexW; currentWidth++)
             {
-                float x = currentWidth / (float) vertexW * size;
-                float y = currentHeight / (float)vertexH * size;
+                float x = currentWidth / (float) (vertexW - 1) * size;
+                float y = currentHeight / (float) (vertexH - 1) * size;
                 float altitude = heightInterval.Lerp(noise.GetNoise(transform.position.x - size / 2.0f + x, transform.position.z - size / 2.0f + y));
                 vertices[currentHeight * vertexW + currentWidth].Set(x, altitude, y);
             }
