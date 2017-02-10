@@ -6,7 +6,8 @@ public class WorldBuilder : MonoBehaviour
     public GameObject landscapePrefab;
     public float chunkSize;
 
-    private Landscape[] landscapeArray;
+    [HideInInspector]
+    public Landscape[] landscapeArray;
     private float trueChunkSize;
 
 	void Start () {
