@@ -14,18 +14,98 @@ public class PlanetMeshCreator : MonoBehaviour
 	// i	   24	   94	  384	 1536	 6104
 
 	// Les faces sont dans le sens direct
-
-	private Mesh mesh;
-
+	
 	public float radius = 10.0f;
 	public int iterations = 1;
 
-	void Start ()
+	private Mesh mesh;
+
+		void Start ()
 	{
 		mesh = gameObject.AddComponent<MeshFilter>().mesh;
 
-		GeneratePlanet(iterations);
+		//GeneratePlanet(iterations);
+
+		GenerateIcosaedre();
 	}
+
+
+	void GenerateIcosaedre()
+	{
+		Vector3[] vertices = new Vector3[20];
+		int[] indices = new int[20 * 3];
+
+		// A. VERTICES GENERATION =====================================
+		float alpha = Mathf.PI / 3; // angle entre l'abscisse et un point de la ceinture
+		float theta = 2 * Mathf.PI / 5; // angles du pentagone
+		float phi = 2 * Mathf.Cos(Mathf.PI / 5); // nombre d'or ~1.618
+
+		vertices[0] = Vector3.up;
+		for (int i = 1; i < 6; i++)
+		{
+			vertices[i] = new Vector3(Mathf.Sin(i * theta) * Mathf.Sin(alpha), Mathf.Cos(alpha), Mathf.Cos(i * theta) * Mathf.Sin(alpha));
+				//Vector3.up * phi + Vector3.forward * Mathf.Cos(i * theta) * Mathf.Sqrt(3) / 2 + Vector3.right * Mathf.Sin(i * theta) * Mathf.Sqrt(3) / 2;
+		}
+		for (int i = 6; i < 11; i++)
+		{
+			vertices[i] = new Vector3(Mathf.Sin(i * theta + theta / 2) * Mathf.Sin(alpha), -Mathf.Cos(alpha),  Mathf.Cos(i * theta + theta / 2) * Mathf.Sin(alpha));
+				//-Vector3.up * phi + Vector3.forward * Mathf.Cos(i * theta + theta / 2) * Mathf.Sqrt(3) / 2 + Vector3.right * Mathf.Sin(i * theta + theta / 2) * Mathf.Sqrt(3) / 2;
+		}
+		vertices[11] = -Vector3.up;
+
+		for (int vertToNormalize = 0; vertToNormalize < 12; vertToNormalize++)
+		{
+			vertices[vertToNormalize] = radius * vertices[vertToNormalize];
+		}
+
+		// B. INDICES GENERATION =====================================
+		int ii = 0; // for indice index
+
+		// 1. triangles du chapeau du haut : 0-1-2, 0-2-3, ... 0-5-1
+		for (int i = 0; i < 5; i++)
+		{
+			indices[ii] = 0;
+			indices[ii + 1] = i + 1;
+			indices[ii + 2] = (i + 1) % 5 + 1;
+			ii += 3;
+		}
+		// 2. triangles de la ceinture : 1-6-2, 2-6-7, ... 5-10-1, 1-10-6
+		/* 1-6-2, 
+		 * 2-6-7, 
+		 * 2-7-3, 
+		 * 3-7-8, 
+		 * 3-8-4, 
+		 * 4-8-9,
+		 * 4-9-5,
+		 * 5-9-10,
+		 * 5-10-1, 
+		 * 1-10-6*/
+		for (int i = 0; i < 5; i++)
+		{
+			indices[ii] = i + 1;
+			indices[ii + 1] = i + 6;
+			indices[ii + 2] = (i + 1) % 5 + 1;
+			ii += 3;
+
+			indices[ii] = (i + 1) % 5 + 1;
+			indices[ii + 1] = i + 6;
+			indices[ii + 2] = (i + 1) % 5 + 6;
+			ii += 3;
+		}
+		// 3. triangles du chapeau du bas :
+		for (int i = 0; i < 5; i++)
+		{
+			indices[ii] = i + 6;
+			indices[ii + 1] = 11;
+			indices[ii + 2] = (i + 1) % 5 + 6;
+			ii += 3;
+		}
+		
+		mesh.vertices = vertices;
+		mesh.triangles = indices;
+		mesh.RecalculateNormals();
+	}
+
 
 	void GeneratePlanet(int nombreIterations)
 	{
@@ -40,7 +120,9 @@ public class PlanetMeshCreator : MonoBehaviour
 		int[] baseIndices;
 		GenerateBaseVertices(out baseVertices, out baseIndices);
 		
-
+		// Take 2 vertices
+		// Generate a vertex between
+		// Normalize new vertex to radius
 
 
 
