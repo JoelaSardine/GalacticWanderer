@@ -8,7 +8,9 @@ public class SpaceshipController : MonoBehaviour
 	public float rotationSpeed;
 	public float acceleration;
 
-	public GameObject _particle1;
+    public Transform InsideSpaceShip;
+    public Transform OutsideSpaceShip;
+    public GameObject _particle1;
 	public GameObject _particle2;
 	
 	void Awake()
@@ -66,5 +68,10 @@ public class SpaceshipController : MonoBehaviour
 		{ // Pencher à droite
 			rigidbody.AddTorque(-transform.forward * rotationSpeed);
 		}
+        if(Input.GetKey(KeyCode.F1))
+        { // retourner dans le vaisseau
+            InsideSpaceShip.gameObject.SetActive(true);
+            OutsideSpaceShip.gameObject.SetActive(false);
+        }
 	}
 }
