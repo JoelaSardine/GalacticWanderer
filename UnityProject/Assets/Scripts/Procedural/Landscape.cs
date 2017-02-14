@@ -22,6 +22,9 @@ public class Landscape : MonoBehaviour
 
     public FastNoise.NoiseType noiseType;
 
+    [HideInInspector]
+    public Mesh mesh;
+
     // Set to true to have in-editor simulation
     public bool activatedInEditor;
 
@@ -29,14 +32,15 @@ public class Landscape : MonoBehaviour
     private int vertexH;
     private int vertexPerLine;
 
-    [HideInInspector]
-    public Mesh mesh;
+    private static Texture2D texture;
 
     // Generated vertices
     private Vector3[] vertices;
 
     // Generated indexes
     private int[] indexes;
+
+    private Vector2[] uvs;
 
     private FastNoise noise;
 
@@ -46,9 +50,46 @@ public class Landscape : MonoBehaviour
 	{
 	    if (!isReady)
 	    {
+	        InitTexture();
+	        InitRenderer();
 	        Generate();
 	    }
 	}
+
+    public static void InitTexture()
+    {
+        if (texture == null)
+        {
+            texture = new Texture2D(1, 100);
+
+            for (int i = 0; i < 100; i++)
+            {
+                Color color;
+                if (i <= 5)
+                {
+                    color = new Color(0.0f, 0.0f, 0.5f);
+                }
+                else if (i <= 50)
+                {
+                    color = new Color(0.0f, 0.5f, 0.0f);
+                }
+                else
+                {
+                    color = new Color(1.0f, 1.0f, 1.0f);
+                }
+
+                texture.SetPixel(0, i, color);
+                texture.wrapMode = TextureWrapMode.Repeat;
+                texture.Apply();
+            }
+        }
+    }
+
+    public void InitRenderer()
+    {
+        MeshRenderer renderer = GetComponent<MeshRenderer>();
+        renderer.material.mainTexture = texture;
+    }
 
     public void Generate()
     {
@@ -125,6 +166,7 @@ public class Landscape : MonoBehaviour
     private void GenerateVertices()
     {
         vertices = new Vector3[vertexH * vertexW];
+        uvs = new Vector2[vertexH * vertexW];
         for (int currentHeight = 0; currentHeight < vertexH; currentHeight++)
         {
             for (int currentWidth = 0; currentWidth < vertexW; currentWidth++)
@@ -133,11 +175,16 @@ public class Landscape : MonoBehaviour
                 float y = currentHeight / (float) (vertexH - 1) * size;
                 float altitude = heightInterval.Lerp(noise.GetNoise(transform.position.x - size / 2.0f + x, transform.position.z - size / 2.0f + y));
                 vertices[currentHeight * vertexW + currentWidth].Set(x, altitude, y);
+
+                float widthRatio = currentWidth / (float) (vertexW - 1);
+                float altitudeRatio = (altitude - heightInterval.min) / heightInterval.length;
+
+                uvs[currentHeight * vertexW + currentWidth] = new Vector2(widthRatio, altitudeRatio);
             }
         }
 
-
         mesh.vertices = vertices;
+        mesh.uv = uvs;
     }
 
     private void GenerateIndexes()
