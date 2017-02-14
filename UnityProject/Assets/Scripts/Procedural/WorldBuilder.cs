@@ -13,6 +13,8 @@ public class WorldBuilder : MonoBehaviour
 	void Start () {
 		landscapeArray = new Landscape[size * size];
 
+
+	    Landscape.InitTexture();
 	    for (int y = 0; y < size; y++)
 	    {
 	        for (int x = 0; x < size; x++)
@@ -30,7 +32,9 @@ public class WorldBuilder : MonoBehaviour
 	                landscape.size = chunkSize;
 
                     landscapeGo.transform.position = new Vector3(x * chunkSize, 0, y * chunkSize);
-                    landscape.Generate();
+
+	                landscape.InitRenderer();
+	                landscape.Generate();
 	            }
 	        }
 	    }

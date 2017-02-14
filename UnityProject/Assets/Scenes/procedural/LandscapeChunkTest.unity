@@ -116,7 +116,7 @@ Light:
   m_Enabled: 1
   serializedVersion: 7
   m_Type: 1
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
@@ -181,7 +181,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0375ded6fb1bc940b0b6e3735f88cda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: 4
+  size: 9
   landscapePrefab: {fileID: 1233811254343366, guid: f202daf63355c7242800154594a350a5,
     type: 2}
   chunkSize: 100
