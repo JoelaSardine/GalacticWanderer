@@ -26,17 +26,104 @@ public class PlanetMeshCreator : MonoBehaviour
 
 		//GeneratePlanet(iterations);
 
-		GenerateIcosaedre();
+		//GenerateIcosaedre();
+		GenerateIcosaedreV2();
 	}
 
+	void GenerateIcosaedreV2()
+	{
+		Vector3[] vertices = new Vector3[12];
+		int[] indices = new int[20 * 3];
+
+		// r : radius ; a : side
+		// r = a * sin(2 * PI / 5) = (a * sqrt(phi * sqrt(5))) / 2
+		// a = r / sin(2 * PI / 5) = 2 * r / sqrt(phi * sqrt(5))
+		float phi = 2 * Mathf.Cos(Mathf.PI / 5); // nombre d'or ~1.618
+		float a = radius / Mathf.Sin(2.0f * Mathf.PI / 5.0f);
+
+		a /= 2.0f; // largeur du rectangle d'or
+		float l = a * phi; // longueur du rectangle d'or
+
+		vertices[0] = new Vector3(-a, +l, 0); // A (top)
+		vertices[1] = new Vector3(+a, +l, 0); // B
+		vertices[8] = new Vector3(-a, -l, 0); // I
+		vertices[11] = new Vector3(+a, -l, 0); // L (bottom)
+
+		vertices[9] = new Vector3(0, -a, +l); // J
+		vertices[5] = new Vector3(0, +a, +l); // F
+		vertices[7] = new Vector3(0, -a, -l); // H
+		vertices[2] = new Vector3(0, +a, -l); // C
+
+		vertices[6] = new Vector3(+l, 0, -a); // G
+		vertices[10] = new Vector3(+l, 0, +a); // K
+		vertices[3] = new Vector3(-l, 0, -a); // D
+		vertices[4] = new Vector3(-l, 0, +a); // E
+
+		// B. INDICES GENERATION =====================================
+		int ii = 0; // for indice index
+
+		// 1. triangles du chapeau du haut : 0-1-2, 0-2-3, ... 0-5-1
+		for (int i = 0; i < 5; i++)
+		{
+			indices[ii] = 0;
+			indices[ii + 1] = i + 1;
+			indices[ii + 2] = (i + 1) % 5 + 1;
+			ii += 3;
+		}
+		// 2. triangles de la ceinture : 1-6-2, 2-6-7, ... 5-10-1, 1-10-6
+		/* 1-6-2, 
+		 * 2-6-7, 
+		 * 2-7-3, 
+		 * 3-7-8, 
+		 * 3-8-4, 
+		 * 4-8-9,
+		 * 4-9-5,
+		 * 5-9-10,
+		 * 5-10-1, 
+		 * 1-10-6*/
+		for (int i = 0; i < 5; i++)
+		{
+			indices[ii] = i + 1;
+			indices[ii + 1] = i + 6;
+			indices[ii + 2] = (i + 1) % 5 + 1;
+			ii += 3;
+
+			indices[ii] = (i + 1) % 5 + 1;
+			indices[ii + 1] = i + 6;
+			indices[ii + 2] = (i + 1) % 5 + 6;
+			ii += 3;
+		}
+		// 3. triangles du chapeau du bas :
+		for (int i = 0; i < 5; i++)
+		{
+			indices[ii] = i + 6;
+			indices[ii + 1] = 11;
+			indices[ii + 2] = (i + 1) % 5 + 6;
+			ii += 3;
+		}
+
+		System.Text.StringBuilder sb = new System.Text.StringBuilder();
+		sb.AppendLine("Sides : ");
+		for (int i = 0; i + 2 < indices.Length; i += 3)
+		{
+			sb.AppendLine(Vector3.Distance(vertices[indices[i]], vertices[indices[i + 1]]) + " ; "
+				+ Vector3.Distance(vertices[indices[i + 1]], vertices[indices[i + 2]]) + " ; "
+				+ Vector3.Distance(vertices[indices[i + 2]], vertices[indices[i]]));
+		}
+		Debug.Log(sb.ToString());
+
+		mesh.vertices = vertices;
+		mesh.triangles = indices;
+		mesh.RecalculateNormals();
+	}
 
 	void GenerateIcosaedre()
 	{
-		Vector3[] vertices = new Vector3[20];
+		Vector3[] vertices = new Vector3[12];
 		int[] indices = new int[20 * 3];
 
 		// A. VERTICES GENERATION =====================================
-		float alpha = Mathf.PI / 3; // angle entre l'abscisse et un point de la ceinture
+		float alpha = 2.4118649973628268f / 2.0f; // angle entre l'abscisse et un point de la ceinture
 		float theta = 2 * Mathf.PI / 5; // angles du pentagone
 		float phi = 2 * Mathf.Cos(Mathf.PI / 5); // nombre d'or ~1.618
 
@@ -100,7 +187,17 @@ public class PlanetMeshCreator : MonoBehaviour
 			indices[ii + 2] = (i + 1) % 5 + 6;
 			ii += 3;
 		}
-		
+
+		System.Text.StringBuilder sb = new System.Text.StringBuilder();
+		sb.AppendLine("Sides : ");
+		for (int i = 0; i + 2 < indices.Length; i += 3)
+		{
+			sb.AppendLine(Vector3.Distance(vertices[indices[i]], vertices[indices[i + 1]]) + " ; "
+				+ Vector3.Distance(vertices[indices[i + 1]], vertices[indices[i + 2]]) + " ; "
+				+ Vector3.Distance(vertices[indices[i + 2]], vertices[indices[i]]));
+		}
+		Debug.Log(sb.ToString());
+
 		mesh.vertices = vertices;
 		mesh.triangles = indices;
 		mesh.RecalculateNormals();
