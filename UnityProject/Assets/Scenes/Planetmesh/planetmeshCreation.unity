@@ -152,6 +152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   radius: 10
   iterations: 1
+  DEBUG_ON: 1
 --- !u!4 &106871537
 Transform:
   m_ObjectHideFlags: 0
@@ -352,6 +353,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   radius: 10
   iterations: 1
+  DEBUG_ON: 0
 --- !u!4 &937519855
 Transform:
   m_ObjectHideFlags: 0
