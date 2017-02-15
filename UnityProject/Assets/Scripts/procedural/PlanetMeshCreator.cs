@@ -2,38 +2,45 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlanetMeshCreator : MonoBehaviour
+public class PlanetMeshCreator : Submesh
 {
-	// nombre d'itérations :	n (>= 1)
-	// nombre de vertices :		v = 2^(2n)+2
-	// nombre de faces :		f = 2^(2n+1) = 2*(v-2)
-	// nombre d'indices :		i = 3*f
-	// n		1		2		3		4		5
-	// v		6	   18	   66	  258	 1026
-	// f		8	   32	  128	  512	 2048
-	// i	   24	   94	  384	 1536	 6104
-
 	// Les faces sont dans le sens direct
 	
 	public float radius = 10.0f;
 	public int iterations = 1;
 
-	private Mesh mesh;
+	// Debug
+	public bool DEBUG_ON = false;
+	Dictionary<Vector3, Color> debugPoints;
 
-		void Start ()
+	void Start ()
 	{
-		mesh = gameObject.AddComponent<MeshFilter>().mesh;
+		if (DEBUG_ON) debugPoints = new Dictionary<Vector3, Color>();
 
-		//GeneratePlanet(iterations);
+		Initialize(this, 0, this);
 
-		//GenerateIcosaedre();
-		GenerateIcosaedreV2();
+		CreatePlanet();
 	}
 
-	void GenerateIcosaedreV2()
+	
+	void CreatePlanet()
 	{
-		Vector3[] vertices = new Vector3[12];
-		int[] indices = new int[20 * 3];
+		Vector3[] vertices;
+		int[] indices;
+
+		GenerateIcosaedreV2(out vertices, out indices);
+		
+		mesh.vertices = vertices;
+		mesh.triangles = indices;
+		mesh.RecalculateNormals();
+	}
+
+	#region Base polyedre generation
+
+	void GenerateIcosaedreV2(out Vector3[] vertices, out int[] indices)
+	{
+		vertices = new Vector3[12];
+		indices = new int[20 * 3];
 
 		// r : radius ; a : side
 		// r = a * sin(2 * PI / 5) = (a * sqrt(phi * sqrt(5))) / 2
@@ -41,23 +48,23 @@ public class PlanetMeshCreator : MonoBehaviour
 		float phi = 2 * Mathf.Cos(Mathf.PI / 5); // nombre d'or ~1.618
 		float a = radius / Mathf.Sin(2.0f * Mathf.PI / 5.0f);
 
-		a /= 2.0f; // largeur du rectangle d'or
-		float l = a * phi; // longueur du rectangle d'or
+		a /= 2.0f; // width of rectangle d'or
+		float l = a * phi; // height of rectangle d'or
 
-		vertices[0] = new Vector3(-a, +l, 0); // A (top)
-		vertices[1] = new Vector3(+a, +l, 0); // B
-		vertices[8] = new Vector3(-a, -l, 0); // I
-		vertices[11] = new Vector3(+a, -l, 0); // L (bottom)
+		vertices[0] = new Vector3(-a, +l, 0);  // A top
+		vertices[1] = new Vector3(+a, +l, 0);  // B hb = high belt
+		vertices[8] = new Vector3(-a, -l, 0);  // I lb = low belt
+		vertices[11] = new Vector3(+a, -l, 0); // L bottom
 
-		vertices[9] = new Vector3(0, -a, +l); // J
-		vertices[5] = new Vector3(0, +a, +l); // F
-		vertices[7] = new Vector3(0, -a, -l); // H
-		vertices[2] = new Vector3(0, +a, -l); // C
+		vertices[9] = new Vector3(0, -a, +l);  // J lb
+		vertices[5] = new Vector3(0, +a, +l);  // F hb
+		vertices[7] = new Vector3(0, -a, -l);  // H lb
+		vertices[2] = new Vector3(0, +a, -l);  // C hb
 
-		vertices[6] = new Vector3(+l, 0, -a); // G
-		vertices[10] = new Vector3(+l, 0, +a); // K
-		vertices[3] = new Vector3(-l, 0, -a); // D
-		vertices[4] = new Vector3(-l, 0, +a); // E
+		vertices[6] = new Vector3(+l, 0, -a);  // G lb
+		vertices[10] = new Vector3(+l, 0, +a); // K lb
+		vertices[3] = new Vector3(-l, 0, -a);  // D hb
+		vertices[4] = new Vector3(-l, 0, +a);  // E hb
 
 		// B. INDICES GENERATION =====================================
 		int ii = 0; // for indice index
@@ -102,21 +109,29 @@ public class PlanetMeshCreator : MonoBehaviour
 			ii += 3;
 		}
 
-		System.Text.StringBuilder sb = new System.Text.StringBuilder();
-		sb.AppendLine("Sides : ");
-		for (int i = 0; i + 2 < indices.Length; i += 3)
+		#region GenerateIcosaedreV2_DEBUG
+		if (DEBUG_ON)
 		{
-			sb.AppendLine(Vector3.Distance(vertices[indices[i]], vertices[indices[i + 1]]) + " ; "
-				+ Vector3.Distance(vertices[indices[i + 1]], vertices[indices[i + 2]]) + " ; "
-				+ Vector3.Distance(vertices[indices[i + 2]], vertices[indices[i]]));
-		}
-		Debug.Log(sb.ToString());
+			debugPoints.Add(vertices[0], Color.white); // A
+			debugPoints.Add(vertices[1], Color.red); // B
+			debugPoints.Add(vertices[6], Color.green); // G
+			debugPoints.Add(vertices[2], Color.blue); // C
+			debugPoints.Add(vertices[11], Color.black); // L
 
-		mesh.vertices = vertices;
-		mesh.triangles = indices;
-		mesh.RecalculateNormals();
+			System.Text.StringBuilder sb = new System.Text.StringBuilder();
+			sb.AppendLine("Sides : ");
+			for (int i = 0; i + 2 < indices.Length; i += 3)
+			{
+				sb.AppendLine(Vector3.Distance(vertices[indices[i]], vertices[indices[i + 1]]) + " ; "
+					+ Vector3.Distance(vertices[indices[i + 1]], vertices[indices[i + 2]]) + " ; "
+					+ Vector3.Distance(vertices[indices[i + 2]], vertices[indices[i]]));
+			}
+			Debug.Log(sb.ToString());
+		}
+		#endregion
 	}
 
+	[System.Obsolete("Not perfectly accurate. Use GenerateIcosaedreV2 instead.")]
 	void GenerateIcosaedre()
 	{
 		Vector3[] vertices = new Vector3[12];
@@ -125,7 +140,6 @@ public class PlanetMeshCreator : MonoBehaviour
 		// A. VERTICES GENERATION =====================================
 		float alpha = 2.4118649973628268f / 2.0f; // angle entre l'abscisse et un point de la ceinture
 		float theta = 2 * Mathf.PI / 5; // angles du pentagone
-		float phi = 2 * Mathf.Cos(Mathf.PI / 5); // nombre d'or ~1.618
 
 		vertices[0] = Vector3.up;
 		for (int i = 1; i < 6; i++)
@@ -202,39 +216,8 @@ public class PlanetMeshCreator : MonoBehaviour
 		mesh.triangles = indices;
 		mesh.RecalculateNormals();
 	}
-
-
-	void GeneratePlanet(int nombreIterations)
-	{
-		int nombreVertices = Pow(2, 2 * nombreIterations) + 2;
-		int nombreFaces = 2 * (nombreVertices - 2);
-		int nombreIndices = 3 * nombreFaces;
-
-		Vector3[] vertices = new Vector3[nombreVertices];
-		int[] indices = new int[nombreIndices];
-
-		Vector3[] baseVertices;
-		int[] baseIndices;
-		GenerateBaseVertices(out baseVertices, out baseIndices);
-		
-		// Take 2 vertices
-		// Generate a vertex between
-		// Normalize new vertex to radius
-
-
-
-
-
-
-		vertices = baseVertices;
-		indices = baseIndices;
-
-		mesh.vertices = vertices;
-		mesh.triangles = indices;
-		mesh.RecalculateNormals();
-	}
-
-	void GenerateBaseVertices(out Vector3[] baseVertices, out int[] baseIndices)
+	
+	void GenerateOctaedre(out Vector3[] baseVertices, out int[] baseIndices)
 	{
 		baseVertices = new Vector3[6];
 		baseVertices[0] = Vector3.up * radius * 2;
@@ -254,6 +237,18 @@ public class PlanetMeshCreator : MonoBehaviour
 		baseIndices[15] = 5; baseIndices[16] = 3; baseIndices[17] = 2;
 		baseIndices[18] = 5; baseIndices[19] = 4; baseIndices[20] = 3;
 		baseIndices[21] = 5; baseIndices[22] = 1; baseIndices[23] = 4;
+	}
+
+	#endregion
+
+	void CreateGeode()
+	{
+
+	}
+
+	void SubdivideMesh()
+	{
+
 	}
 
 	/// <summary>
@@ -289,6 +284,36 @@ public class PlanetMeshCreator : MonoBehaviour
 		return 0;
 	}
 
+	#region Gizmos
+
+	private void OnDrawGizmosSelected()
+	{
+		if (!DEBUG_ON || !Application.isPlaying) return;
+
+		Matrix4x4 oldMatrix = Gizmos.matrix;
+		Gizmos.matrix = transform.localToWorldMatrix;
+
+		Gizmos.color = Color.green;
+		Gizmos.DrawLine(5.0f * mesh.vertices[0], 5.0f * mesh.vertices[mesh.vertices.Length - 1]);
+
+		Debug.Log(Time.time);
+		mesh.vertices[0] = mesh.vertices[0].normalized * (radius  + radius * Mathf.Sin(Time.time));
+		mesh.RecalculateNormals();
+
+		foreach (Vector3 point in debugPoints.Keys)
+		{
+			Gizmos.color = debugPoints[point];
+			Gizmos.DrawSphere(point, 1.0f);
+		}
+
+		Gizmos.matrix = oldMatrix;
+	}
+
+	#endregion Gizmos
+
+	#region Math and tools 
+
+	/// <summary>Returns value ^ power as int. Returns 0 if power < 0.</summary>
 	private int Pow(int value, int power)
 	{
 		if (power == 0) { return 1; }
@@ -301,4 +326,6 @@ public class PlanetMeshCreator : MonoBehaviour
 		}
 		return result;
 	}
+	
+	#endregion Math and tools
 }
