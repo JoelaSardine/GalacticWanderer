@@ -25,6 +25,8 @@ public class Landscape : MonoBehaviour
     [HideInInspector]
     public Mesh mesh;
 
+    public MeshCollider collider;
+
     // Set to true to have in-editor simulation
     public bool activatedInEditor;
 
@@ -50,6 +52,7 @@ public class Landscape : MonoBehaviour
 	{
 	    if (!isReady)
 	    {
+	        InitCollider();
 	        InitTexture();
 	        InitRenderer();
 	        Generate();
@@ -82,6 +85,17 @@ public class Landscape : MonoBehaviour
                 texture.wrapMode = TextureWrapMode.Repeat;
                 texture.Apply();
             }
+        }
+    }
+
+    public void InitCollider()
+    {
+        if (collider == null)
+        {
+            collider = gameObject.AddComponent<MeshCollider>();
+            collider.convex = false;
+            collider.inflateMesh = false;
+            collider.sharedMesh = mesh;
         }
     }
 
