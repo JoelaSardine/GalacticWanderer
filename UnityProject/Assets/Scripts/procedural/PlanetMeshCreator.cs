@@ -9,29 +9,43 @@ public class PlanetMeshCreator : Submesh
 	public float radius = 10.0f;
 	public int iterations = 1;
 
+	public int geodeSubdivisions = 1;
+
 	// Debug
 	public bool DEBUG_ON = false;
 	Dictionary<Vector3, Color> debugPoints;
+	Dictionary<Vector3, Color> debugPointsPrime;
+	public int debugIndice;
+
+	public Vector3[] vertices;
+	private int[] indices;
 
 	void Start ()
 	{
 		if (DEBUG_ON) debugPoints = new Dictionary<Vector3, Color>();
+		if (DEBUG_ON) debugPointsPrime = new Dictionary<Vector3, Color>();
 
 		Initialize(this, 0, this);
 
 		CreatePlanet();
 	}
 
-	
+	private void Update()
+	{
+		debugIndice = (int)Mathf.Repeat(Time.time * vertices.Length / 50.0f, vertices.Length);
+	}
+
 	void CreatePlanet()
 	{
-		Vector3[] vertices;
-		int[] indices;
+		//Vector3[] vertices;
+		//int[] indices;
+		Vector3[] baseVertices;
+		int[] baseIndices;
+		GenerateIcosaedreV2(out baseVertices, out baseIndices);
+		CreateGeode(baseVertices, baseIndices);
 
-		GenerateIcosaedreV2(out vertices, out indices);
-		
-		mesh.vertices = vertices;
-		mesh.triangles = indices;
+		mesh.vertices = baseVertices;
+		mesh.triangles = baseIndices;
 		mesh.RecalculateNormals();
 	}
 
@@ -112,11 +126,11 @@ public class PlanetMeshCreator : Submesh
 		#region GenerateIcosaedreV2_DEBUG
 		if (DEBUG_ON)
 		{
-			debugPoints.Add(vertices[0], Color.white); // A
-			debugPoints.Add(vertices[1], Color.red); // B
-			debugPoints.Add(vertices[6], Color.green); // G
-			debugPoints.Add(vertices[2], Color.blue); // C
-			debugPoints.Add(vertices[11], Color.black); // L
+			debugPointsPrime.Add(vertices[0], Color.white); // A
+			debugPointsPrime.Add(vertices[1], Color.yellow); // B
+			debugPointsPrime.Add(vertices[6], Color.yellow); // G
+			debugPointsPrime.Add(vertices[2], Color.yellow); // C
+			debugPointsPrime.Add(vertices[11], Color.black); // L
 
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
 			sb.AppendLine("Sides : ");
@@ -241,9 +255,143 @@ public class PlanetMeshCreator : Submesh
 
 	#endregion
 
-	void CreateGeode()
+	void CreateGeode(Vector3[] baseVertices, int[] baseIndices/*, out Vector3[] vertices, out int[] indices*/)
 	{
+		System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
+		// We're subdividing each triangle in ((n+1)²) triangles
+		// With a total of (10n² + 20n + 12) vertices
+
+		vertices = new Vector3[10 * Pow(geodeSubdivisions, 2)
+											+ 20 * geodeSubdivisions
+											+ 12];
+		indices = new int[Pow(geodeSubdivisions + 1, 2)];
+
+		int sub = geodeSubdivisions + 1;
+
+		// top vertex ========================================
+		vertices[0] = baseVertices[0];
+		debugPoints.Add(vertices[0], Color.white);
+
+		// bottom vertex ========================================
+		vertices[vertices.Length - 1] = baseVertices[baseVertices.Length - 1];
+		debugPoints.Add(vertices[vertices.Length - 1], Color.black);
+
+		// top hat ========================================
+		for (int s = 1; s < sub + 1; s++) // for each subsivision
+		{
+			int previousIndex = 0;
+			for (int arete = 0; arete < 5; arete++) // for each side
+			{
+				int index = (s * (s - 1) / 2 * 5 + 1) + (arete * s);
+
+				vertices[index] = Push(((sub - s) * baseVertices[0] + s * baseVertices[arete + 1]) / sub);
+				debugPoints.Add(vertices[index], new Color(1.0f, 1 - (float)s / (sub + 1), 1 - (float)s / (sub + 1)));
+				//sb.Append(index + ", ");
+
+				for (int i = 1; i < s; i++) // finish current triangle
+				{
+					if (arete == 0) break;
+
+					vertices[index - i] = Push(((s - i) * vertices[index] + i * vertices[previousIndex]) / s);
+					debugPoints.Add(vertices[index - i], new Color(0, (float)i / s, 1.0f - (float)i / s));
+					//sb.Append("(" + (index - i) + ")");
+
+					if (arete == 4)
+					{
+						vertices[index + i] = Push(((s - i) * vertices[index] + i * vertices[(s * (s - 1) / 2 * 5 + 1)]) / s);
+						debugPoints.Add(vertices[index + i], new Color(0, 1.0f - (float)i / s, (float)i / s));
+						//sb.Append("(" + (index + i) + ")");
+					}
+				}
+				previousIndex = index;
+			}
+			//sb.AppendLine("");
+		}
+
+		// bottom hat  ========================================
+		int n = 10 * Pow(geodeSubdivisions, 2) + 20 * geodeSubdivisions + 12 - 1; // index of last vertex in 'vertices'
+		int baseN = 11; // index of last vertex in 'baseVertices'
+		for (int s = 1; s < sub + 1; s++)
+		{
+			int previousIndex = 0;
+			for (int arete = 0; arete < 5; arete++)
+			{
+				int index = n - ((s * (s - 1) / 2 * 5 + 1) + (arete * s));
+
+				vertices[index] = Push(((sub - s) * baseVertices[baseN] + s * baseVertices[baseN - (arete + 1)]) / sub);
+				debugPoints.Add(vertices[index], new Color(1.0f, 1 - (float)s / (sub + 1), 1 - (float)s / (sub + 1)));
+				//sb.Append(index + ", ");
+
+				for (int i = 1; i < s; i++)
+				{
+					if (arete == 0) break;
+
+					vertices[index + i] = Push(((s - i) * vertices[index] + i * vertices[previousIndex]) / s);
+					debugPoints.Add(vertices[index + i], new Color(0, (float)i / s, 1.0f - (float)i / s));
+					//sb.Append("(" + (index + i) + ")");
+					
+					if (arete == 4)
+					{
+						vertices[index - i] = Push(((s - i) * vertices[index] + i * vertices[n - ((s * (s - 1) / 2 * 5 + 1))]) / s);
+						debugPoints.Add(vertices[index - i], new Color(0, 1.0f - (float)i / s, (float)i / s));
+						//sb.Append("(" + (index - i) + ")");
+					}
+				}
+
+				previousIndex = index;
+			}
+			//sb.AppendLine("");
+		}
+
+		// bottom hat V2 ========================================
+		int m = 1 // m : index of G : first vector at the top of the bottom hat
+				+ 5 * geodeSubdivisions * (geodeSubdivisions + 1) / 2
+				+ 5 * (geodeSubdivisions + 1)
+				+ 5 * geodeSubdivisions * (geodeSubdivisions + 1) ; // index of G : first vector at the top oh the hat 
+		for (int s = 1; s < sub + 1; s++)
+		{
+			int previousIndex = 0;
+			for (int arete = 0; arete < 5; arete++)
+			{
+				int index = (s * (s - 1) / 2 * 5 + 1) + (arete * s);
+				index = m + (s * (s - 1) / 2 * 5 + 1) + (arete * s);
+				// INDEX TODO
+			}
+		}
+
+		// belt ========================================
+		for (int s = 1; s < sub; s++)
+		{
+			int idbug1 = (sub * (sub - 1) / 2 * 5 + 1) + (0 * sub);
+			debugPoints[vertices[idbug1]] = Color.white;
+			int idbug2 = n - ((sub * (sub - 1) / 2 * 5 + 1) + (0 * sub));
+			debugPoints[vertices[idbug2]] = Color.white;
+
+			for (int arete = 0; arete < 5; arete++)
+			{
+				// B to G then C to G
+				int idA = (sub * (sub - 1) / 2 * 5 + 1) + (arete * sub);
+				//debugPoints[vertices[idA]] = Color.red;
+				int idB = n - ((sub * (sub - 1) / 2 * 5 + 1) + (arete * sub));
+				//debugPoints[vertices[idB]] = Color.red;
+				int idC;
+			}
+		}
+
+
+		// push to sphere ========================================
+		foreach (Vector3 point in vertices)
+		{
+
+		}
+
+		if (DEBUG_ON) Debug.Log(sb);
+	}
+
+	private Vector3 Push(Vector3 point)
+	{
+		return point.normalized * radius;
 	}
 
 	void SubdivideMesh()
@@ -253,33 +401,27 @@ public class PlanetMeshCreator : Submesh
 
 	/// <summary>
 	/// Returns the indice of the vertice at given position. 
-	/// Row starts at the TOP. Index turns from FORWARD to RIGHT.
+	/// Row starts at the TOP.
 	/// </summary>
-	private int GetVerticeIndex(int iterations, int row, int index)
+	private int GetVerticeIndex(int row, int index)
 	{
-		int maxRows = Pow(2, iterations) + 1;
-		if (row < 0 || index < 0 || row >= maxRows)
+		int maxRow = (geodeSubdivisions + 1) * 3 + 1;
+
+		if (row < 0 || row >= maxRow)
 		{
-			Debug.LogError("Error in GetVerticeIndex : row out of limits");
-			return -1;
-		}
-		else if (row == 0 || row == maxRows - 1)
-		{
-			if (index != 0)
-			{
-				Debug.LogError("Error in GetVerticeIndex : index out of limits (max 0)");
-				return -1;
-			}
-		}
-		else if (index >= Mathf.Min(4 * row, 4 * (maxRows - 1 - row)))
-		{
-			Debug.LogError("Error in GetVerticeIndex : index out of limits");
-			return -1;
+			Debug.LogError("GetVerticeIndex error : Row is invalid (" + row + " on " + maxRow + ")");
+			return 0;
 		}
 
+		int maxIndex = 0;
+
+		if (index < 0 || index >= maxIndex)
+		{
+			Debug.LogError("GetVerticeIndex error : Index is invalid (" + index + " on " + maxIndex + ")");
+			return 0;
+		}
 
 		// TODO
-
 
 		return 0;
 	}
@@ -293,18 +435,26 @@ public class PlanetMeshCreator : Submesh
 		Matrix4x4 oldMatrix = Gizmos.matrix;
 		Gizmos.matrix = transform.localToWorldMatrix;
 
-		Gizmos.color = Color.green;
+		Gizmos.color = Color.white;
 		Gizmos.DrawLine(5.0f * mesh.vertices[0], 5.0f * mesh.vertices[mesh.vertices.Length - 1]);
 
-		Debug.Log(Time.time);
 		mesh.vertices[0] = mesh.vertices[0].normalized * (radius  + radius * Mathf.Sin(Time.time));
 		mesh.RecalculateNormals();
+
+		foreach (Vector3 point in debugPointsPrime.Keys)
+		{
+			Gizmos.color = debugPointsPrime[point];
+			Gizmos.DrawSphere(point, 0.4f);
+		}
 
 		foreach (Vector3 point in debugPoints.Keys)
 		{
 			Gizmos.color = debugPoints[point];
-			Gizmos.DrawSphere(point, 1.0f);
+			Gizmos.DrawSphere(point, 0.2f);
 		}
+
+		Gizmos.color = Color.white;
+		Gizmos.DrawSphere(vertices[debugIndice], 0.5f);
 
 		Gizmos.matrix = oldMatrix;
 	}
