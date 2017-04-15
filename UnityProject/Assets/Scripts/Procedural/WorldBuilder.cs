@@ -35,7 +35,6 @@ public class WorldBuilder : MonoBehaviour
 
 	                landscape.InitRenderer();
 	                landscape.Generate();
-	                landscape.InitCollider();
 	            }
 	        }
 	    }
