@@ -9,6 +9,11 @@ public class Landscape : MonoBehaviour
 
     // Height bounds of the landscape
     public Interval heightInterval = new Interval(-100, 100);
+    public Interval[] biomesHeight = new Interval[5];
+    public Texture2D atlasTexture;
+    public int atlasLines = 2;
+    public int atlasColumns = 3;
+    public int texResolution = 1024;
 
     // Number of vertex on each side of the landscape chunk
     [Range(10, 255)]
@@ -32,7 +37,9 @@ public class Landscape : MonoBehaviour
     private int vertexH;
     private int vertexPerLine;
 
-    private static Texture2D texture;
+
+    private Texture2D generatedTexture;
+
 
     // Generated vertices
     private Vector3[] vertices;
@@ -56,39 +63,49 @@ public class Landscape : MonoBehaviour
 	    }
 	}
 
-    public static void InitTexture()
+    public void InitTexture()
     {
-        if (texture == null)
+        if (generatedTexture == null)
         {
-            texture = new Texture2D(1, 100);
+            generatedTexture = new Texture2D(texResolution, texResolution);
+            int atlasCellWidth = atlasTexture.width / atlasColumns;
+            int atlasCellHeight = atlasTexture.height / atlasLines;
 
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < texResolution; i++)
             {
-                Color color;
-                if (i <= 5)
+                for (int j = 0; j < texResolution; j++)
                 {
-                    color = new Color(0.0f, 0.0f, 0.5f);
-                }
-                else if (i <= 50)
-                {
-                    color = new Color(0.0f, 0.5f, 0.0f);
-                }
-                else
-                {
-                    color = new Color(1.0f, 1.0f, 1.0f);
-                }
+                    float x = j / (float) texResolution * size;
+                    float y = i / (float) texResolution * size;
+                    float altitude = heightInterval.Lerp(noise.GetNoise(transform.position.x - size / 2.0f + x, transform.position.z - size / 2.0f + y));
 
-                texture.SetPixel(0, i, color);
-                texture.wrapMode = TextureWrapMode.Repeat;
-                texture.Apply();
+                    for (int index = 0; index < biomesHeight.Length; index++)
+                    {
+                        Interval interval = biomesHeight[index];
+                        if (interval.Contains(altitude))
+                        {
+                            int column = index % atlasColumns;
+                            int line = index / atlasLines;
+
+                            int subWidth = (int)(j / (float)texResolution) * atlasCellWidth;
+                            int subHeight = atlasCellHeight - (int) (i / (float) texResolution) * atlasCellHeight;
+
+                            Color pixel = atlasTexture.GetPixel(column * atlasCellWidth + subWidth, atlasTexture.height - line * atlasCellHeight + subHeight);
+                            generatedTexture.SetPixel(j, i, pixel);
+                            break;
+                        }
+                    }
+                }
             }
+            generatedTexture.wrapMode = TextureWrapMode.Clamp;
+            generatedTexture.Apply();
         }
     }
 
     public void InitRenderer()
     {
         MeshRenderer renderer = GetComponent<MeshRenderer>();
-        renderer.material.mainTexture = texture;
+        renderer.material.mainTexture = generatedTexture;
     }
 
     public void Generate()
@@ -177,9 +194,9 @@ public class Landscape : MonoBehaviour
                 vertices[currentHeight * vertexW + currentWidth].Set(x - size / 2.0f, altitude, y - size / 2.0f);
 
                 float widthRatio = currentWidth / (float) (vertexW - 1);
-                float altitudeRatio = (altitude - heightInterval.min) / heightInterval.length;
+                float heightRatio = currentHeight / (float) (vertexH - 1);
 
-                uvs[currentHeight * vertexW + currentWidth] = new Vector2(widthRatio, altitudeRatio);
+                uvs[currentHeight * vertexW + currentWidth] = new Vector2(widthRatio, heightRatio);
             }
         }
 
