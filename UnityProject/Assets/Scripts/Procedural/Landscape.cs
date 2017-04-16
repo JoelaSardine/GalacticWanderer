@@ -65,6 +65,7 @@ public class Landscape : MonoBehaviour
 
     public void InitTexture()
     {
+
         if (generatedTexture == null)
         {
             generatedTexture = new Texture2D(texResolution, texResolution);
@@ -87,10 +88,10 @@ public class Landscape : MonoBehaviour
                             int column = index % atlasColumns;
                             int line = index / atlasLines;
 
-                            int subWidth = (int)(j / (float)texResolution) * atlasCellWidth;
-                            int subHeight = atlasCellHeight - (int) (i / (float) texResolution) * atlasCellHeight;
+                            float cellX = j / (float)(texResolution - 1) * atlasCellWidth;
+                            float cellY = atlasCellHeight - i / (float) (texResolution - 1) * atlasCellHeight;
 
-                            Color pixel = atlasTexture.GetPixel(column * atlasCellWidth + subWidth, atlasTexture.height - line * atlasCellHeight + subHeight);
+                            Color pixel = atlasTexture.GetPixel((int)(column * atlasCellWidth + cellX), (int)(atlasTexture.height - line * atlasCellHeight + cellY));
                             generatedTexture.SetPixel(j, i, pixel);
                             break;
                         }
