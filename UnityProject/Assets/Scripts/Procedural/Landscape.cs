@@ -69,15 +69,15 @@ public class Landscape : MonoBehaviour
         if (generatedTexture == null)
         {
             generatedTexture = new Texture2D(texResolution, texResolution);
-            int atlasCellWidth = atlasTexture.width / atlasColumns;
-            int atlasCellHeight = atlasTexture.height / atlasLines;
+            float atlasCellWidth = atlasTexture.width / (float)atlasColumns;
+            float atlasCellHeight = atlasTexture.height / (float)atlasLines;
 
             for (int i = 0; i < texResolution; i++)
             {
                 for (int j = 0; j < texResolution; j++)
                 {
-                    float x = j / (float) texResolution * size;
-                    float y = i / (float) texResolution * size;
+                    float x = j / (float) (texResolution - 1) * size;
+                    float y = i / (float) (texResolution - 1) * size;
                     float altitude = heightInterval.Lerp(noise.GetNoise(transform.position.x - size / 2.0f + x, transform.position.z - size / 2.0f + y));
 
                     for (int index = 0; index < biomesHeight.Length; index++)
@@ -86,12 +86,12 @@ public class Landscape : MonoBehaviour
                         if (interval.Contains(altitude))
                         {
                             int column = index % atlasColumns;
-                            int line = index / atlasLines;
+                            int line = Mathf.FloorToInt(index / (float)(atlasLines + 1));
 
-                            float cellX = j / (float)(texResolution - 1) * atlasCellWidth;
-                            float cellY = atlasCellHeight - i / (float) (texResolution - 1) * atlasCellHeight;
+                            float cellX = atlasCellWidth * j / (texResolution - 1);
+                            float cellY = atlasCellHeight * (i / (float)(texResolution - 1));
 
-                            Color pixel = atlasTexture.GetPixel((int)(column * atlasCellWidth + cellX), (int)(atlasTexture.height - line * atlasCellHeight + cellY));
+                            Color pixel = atlasTexture.GetPixel((int)(column * atlasCellWidth + cellX), (int)(line * atlasCellHeight + cellY));
                             generatedTexture.SetPixel(j, i, pixel);
                             break;
                         }
