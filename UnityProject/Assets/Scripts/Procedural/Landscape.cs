@@ -10,10 +10,11 @@ public class Landscape : MonoBehaviour
     // Height bounds of the landscape
     public Interval heightInterval = new Interval(-100, 100);
     public Interval[] biomesHeight = new Interval[5];
-    public Texture2D atlasTexture;
     public int atlasLines = 2;
     public int atlasColumns = 3;
     public int texResolution = 1024;
+    public int atlasWidth;
+    public int atlasHeight;
 
     // Number of vertex on each side of the landscape chunk
     [Range(10, 255)]
@@ -53,24 +54,31 @@ public class Landscape : MonoBehaviour
 
     private bool isReady;
 
+
+
+
+    private Vector3 position;
+    private Color[] textureData;
+
+    [HideInInspector]
+    public Color[] atlasTextureData;
+
+    public void SetPosition(Vector3 pos) {
+        position = pos;
+    }
+
 	void Start ()
 	{
-	    if (!isReady)
-	    {
-	        InitTexture();
-	        InitRenderer();
-	        Generate();
-	    }
 	}
 
     public void InitTexture()
     {
 
-        if (generatedTexture == null)
+        if (textureData == null)
         {
-            generatedTexture = new Texture2D(texResolution, texResolution);
-            float atlasCellWidth = atlasTexture.width / (float)atlasColumns;
-            float atlasCellHeight = atlasTexture.height / (float)atlasLines;
+            textureData = new Color[texResolution * texResolution];
+            float atlasCellWidth = atlasWidth / (float)atlasColumns;
+            float atlasCellHeight = atlasHeight / (float)atlasLines;
 
             for (int i = 0; i < texResolution; i++)
             {
@@ -78,7 +86,7 @@ public class Landscape : MonoBehaviour
                 {
                     float x = j / (float) (texResolution - 1) * size;
                     float y = i / (float) (texResolution - 1) * size;
-                    float altitude = heightInterval.Lerp(noise.GetNoise(transform.position.x - size / 2.0f + x, transform.position.z - size / 2.0f + y));
+                    float altitude = heightInterval.Lerp(noise.GetNoise(position.x - size / 2.0f + x, position.z - size / 2.0f + y));
 
                     for (int index = 0; index < biomesHeight.Length; index++)
                     {
@@ -91,22 +99,14 @@ public class Landscape : MonoBehaviour
                             float cellX = atlasCellWidth * j / (texResolution - 1);
                             float cellY = atlasCellHeight * (i / (float)(texResolution - 1));
 
-                            Color pixel = atlasTexture.GetPixel((int)(column * atlasCellWidth + cellX), (int)(line * atlasCellHeight + cellY));
-                            generatedTexture.SetPixel(j, i, pixel);
+                            Color pixel = atlasTextureData[(int)(line * atlasCellHeight + cellY) * atlasWidth + (int)(column * atlasCellWidth + cellX)];
+                            textureData[i * texResolution + j] = pixel;
                             break;
                         }
                     }
                 }
             }
-            generatedTexture.wrapMode = TextureWrapMode.Clamp;
-            generatedTexture.Apply();
         }
-    }
-
-    public void InitRenderer()
-    {
-        MeshRenderer renderer = GetComponent<MeshRenderer>();
-        renderer.material.mainTexture = generatedTexture;
     }
 
     public void Generate()
@@ -121,19 +121,16 @@ public class Landscape : MonoBehaviour
         noise = new FastNoise(seed);
         noise.SetNoiseType(noiseType);
 
-        InitMeshFilterComponent();
-
         if (mesh == null)
             return;
 
         GenerateVertices();
         GenerateIndexes();
-        mesh.RecalculateNormals();
 
         isReady = true;
     }
 
-    void InitMeshFilterComponent()
+    public void InitMeshFilterComponent()
     {
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         if (meshFilter == null)
@@ -191,7 +188,7 @@ public class Landscape : MonoBehaviour
             {
                 float x = currentWidth / (float) (vertexW - 1) * size;
                 float y = currentHeight / (float) (vertexH - 1) * size;
-                float altitude = heightInterval.Lerp(noise.GetNoise(transform.position.x - size / 2.0f + x, transform.position.z - size / 2.0f + y));
+                float altitude = heightInterval.Lerp(noise.GetNoise(position.x - size / 2.0f + x, position.z - size / 2.0f + y));
                 vertices[currentHeight * vertexW + currentWidth].Set(x - size / 2.0f, altitude, y - size / 2.0f);
 
                 float widthRatio = currentWidth / (float) (vertexW - 1);
@@ -200,9 +197,6 @@ public class Landscape : MonoBehaviour
                 uvs[currentHeight * vertexW + currentWidth] = new Vector2(widthRatio, heightRatio);
             }
         }
-
-        mesh.vertices = vertices;
-        mesh.uv = uvs;
     }
 
     private void GenerateIndexes()
@@ -224,7 +218,20 @@ public class Landscape : MonoBehaviour
                 i += 6;
             }
         }
+    }
 
+    public void BindDataToMesh()
+    {
+        mesh.vertices = vertices;
         mesh.triangles = indexes;
+        mesh.uv = uvs;
+        mesh.RecalculateNormals();
+
+        generatedTexture = new Texture2D(texResolution, texResolution);
+        generatedTexture.wrapMode = TextureWrapMode.Clamp;
+        generatedTexture.Apply();
+
+        MeshRenderer renderer = GetComponent<MeshRenderer>();
+        renderer.material.mainTexture = generatedTexture;
     }
 }
