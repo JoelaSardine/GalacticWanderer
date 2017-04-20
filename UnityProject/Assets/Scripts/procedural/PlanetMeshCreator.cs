@@ -32,7 +32,8 @@ public class PlanetMeshCreator : Submesh
 
 	private void Update()
 	{
-		debugIndice = (int)Mathf.Repeat(Time.time * vertices.Length / 50.0f, vertices.Length);
+		if(DEBUG_ON)
+			debugIndice = (int)Mathf.Repeat(Time.time * vertices.Length / 50.0f, vertices.Length);
 	}
 
 	void CreatePlanet()
@@ -127,9 +128,9 @@ public class PlanetMeshCreator : Submesh
 		if (DEBUG_ON)
 		{
 			debugPointsPrime.Add(vertices[0], Color.white); // A
-			debugPointsPrime.Add(vertices[1], Color.yellow); // B
-			debugPointsPrime.Add(vertices[6], Color.yellow); // G
-			debugPointsPrime.Add(vertices[2], Color.yellow); // C
+			debugPointsPrime.Add(vertices[1], Color.red); // B
+			debugPointsPrime.Add(vertices[6], Color.green); // G
+			debugPointsPrime.Add(vertices[2], Color.blue); // C
 			debugPointsPrime.Add(vertices[11], Color.black); // L
 
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -140,7 +141,7 @@ public class PlanetMeshCreator : Submesh
 					+ Vector3.Distance(vertices[indices[i + 1]], vertices[indices[i + 2]]) + " ; "
 					+ Vector3.Distance(vertices[indices[i + 2]], vertices[indices[i]]));
 			}
-			Debug.Log(sb.ToString());
+			//Debug.Log(sb.ToString());
 		}
 		#endregion
 	}
@@ -356,8 +357,15 @@ public class PlanetMeshCreator : Submesh
 			{
 				int index = (s * (s - 1) / 2 * 5 + 1) + (arete * s);
 				index = m + (s * (s - 1) / 2 * 5 + 1) + (arete * s);
+
+				vertices[index] = Push(((sub - s) * baseVertices[baseN] + s * baseVertices[baseN - (arete + 1)]) / sub);
+				sb.Append(index + ", ");
+				//debugPoints.Add(vertices[index], new Color(1.0f, 1 - (float)s / (sub + 1), 1 - (float)s / (sub + 1)));
+
+
 				// INDEX TODO
 			}
+			sb.AppendLine("");
 		}
 
 		// belt ========================================
