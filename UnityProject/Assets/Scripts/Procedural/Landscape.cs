@@ -76,7 +76,6 @@ public class Landscape : MonoBehaviour
 
         if (textureData == null)
         {
-            textureData = new Color[texResolution * texResolution];
             float atlasCellWidth = atlasWidth / (float)atlasColumns;
             float atlasCellHeight = atlasHeight / (float)atlasLines;
 
@@ -115,10 +114,13 @@ public class Landscape : MonoBehaviour
 
         vertexPerLine = (vertexPerSide - 1) / lodFactor + 1;
 
+        Debug.Log("LOD factor : " + lodFactor);
+        Debug.Log("vertex per side : " + vertexPerSide);
+        Debug.Log("vertex per line : " + vertexPerLine);
+
         vertexH = vertexPerLine;
         vertexW = vertexPerLine;
 
-        noise = new FastNoise(seed);
         noise.SetNoiseType(noiseType);
 
         if (mesh == null)
@@ -180,8 +182,6 @@ public class Landscape : MonoBehaviour
 
     private void GenerateVertices()
     {
-        vertices = new Vector3[vertexH * vertexW];
-        uvs = new Vector2[vertexH * vertexW];
         for (int currentHeight = 0; currentHeight < vertexH; currentHeight++)
         {
             for (int currentWidth = 0; currentWidth < vertexW; currentWidth++)
@@ -202,7 +202,6 @@ public class Landscape : MonoBehaviour
     private void GenerateIndexes()
     {
         int i = 0;
-        indexes = new int[(vertexW - 1) * 6 * (vertexH - 1)];
         for (int currentHeight = 0; currentHeight < vertexH - 1; currentHeight++)
         {
             for (int currentWidth = 0; currentWidth < vertexW - 1; currentWidth++)
@@ -220,8 +219,18 @@ public class Landscape : MonoBehaviour
         }
     }
 
+    public void AllocateMemory()
+    {
+        textureData = new Color[texResolution * texResolution];
+        noise = new FastNoise(seed);
+        vertices = new Vector3[vertexH * vertexW];
+        uvs = new Vector2[vertexH * vertexW];
+        indexes = new int[(vertexW - 1) * 6 * (vertexH - 1)];
+    }
+
     public void BindDataToMesh()
     {
+        Debug.Log("vertices.length : " + vertices.Length + " indexes.length : " + indexes.Length + " uvs.length : " + uvs.Length);
         mesh.vertices = vertices;
         mesh.triangles = indexes;
         mesh.uv = uvs;
@@ -229,6 +238,7 @@ public class Landscape : MonoBehaviour
 
         generatedTexture = new Texture2D(texResolution, texResolution);
         generatedTexture.wrapMode = TextureWrapMode.Clamp;
+        generatedTexture.SetPixels(textureData);
         generatedTexture.Apply();
 
         MeshRenderer renderer = GetComponent<MeshRenderer>();

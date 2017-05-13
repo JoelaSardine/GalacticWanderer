@@ -27,6 +27,7 @@ public class LODManager : MonoBehaviour
 
 	void Update ()
 	{
+        return;
 
 	    if (landscapeArray == null)
 	    {
