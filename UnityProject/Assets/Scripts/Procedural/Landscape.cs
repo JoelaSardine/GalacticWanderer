@@ -38,17 +38,19 @@ public class Landscape : MonoBehaviour
     private int vertexH;
     private int vertexPerLine;
 
+    public Logger logger = new Logger();
+
 
     private Texture2D generatedTexture;
 
 
     // Generated vertices
-    private Vector3[] vertices;
+    public Vector3[] vertices;
 
     // Generated indexes
-    private int[] indexes;
+    public int[] indexes;
 
-    private Vector2[] uvs;
+    public Vector2[] uvs;
 
     private FastNoise noise;
 
@@ -74,7 +76,7 @@ public class Landscape : MonoBehaviour
     public void InitTexture()
     {
 
-        if (textureData == null)
+        if (textureData != null)
         {
             float atlasCellWidth = atlasWidth / (float)atlasColumns;
             float atlasCellHeight = atlasHeight / (float)atlasLines;
@@ -110,24 +112,19 @@ public class Landscape : MonoBehaviour
 
     public void Generate()
     {
-        int lodFactor = GetLODFactor();
-
-        vertexPerLine = (vertexPerSide - 1) / lodFactor + 1;
-
-        Debug.Log("LOD factor : " + lodFactor);
-        Debug.Log("vertex per side : " + vertexPerSide);
-        Debug.Log("vertex per line : " + vertexPerLine);
-
-        vertexH = vertexPerLine;
-        vertexW = vertexPerLine;
-
-        noise.SetNoiseType(noiseType);
-
         if (mesh == null)
             return;
 
-        GenerateVertices();
-        GenerateIndexes();
+        try
+        {
+            GenerateVertices();
+            GenerateIndexes();
+        }
+        catch (System.Exception e)
+        {
+            logger.Log(e.Message + "\n" + e.StackTrace.ToString());
+        }
+
 
         isReady = true;
     }
@@ -182,6 +179,8 @@ public class Landscape : MonoBehaviour
 
     private void GenerateVertices()
     {
+        logger.Log("generateVertices() : vertices size : " + vertices.Length);
+
         for (int currentHeight = 0; currentHeight < vertexH; currentHeight++)
         {
             for (int currentWidth = 0; currentWidth < vertexW; currentWidth++)
@@ -189,6 +188,8 @@ public class Landscape : MonoBehaviour
                 float x = currentWidth / (float) (vertexW - 1) * size;
                 float y = currentHeight / (float) (vertexH - 1) * size;
                 float altitude = heightInterval.Lerp(noise.GetNoise(position.x - size / 2.0f + x, position.z - size / 2.0f + y));
+
+                logger.Log("Trying to set vertices at " + currentWidth + "," + currentHeight);
                 vertices[currentHeight * vertexW + currentWidth].Set(x - size / 2.0f, altitude, y - size / 2.0f);
 
                 float widthRatio = currentWidth / (float) (vertexW - 1);
@@ -221,16 +222,26 @@ public class Landscape : MonoBehaviour
 
     public void AllocateMemory()
     {
+        int lodFactor = GetLODFactor();
+
+        vertexPerLine = (vertexPerSide - 1) / lodFactor + 1;
+
+        vertexH = vertexPerLine;
+        vertexW = vertexPerLine;
+
         textureData = new Color[texResolution * texResolution];
         noise = new FastNoise(seed);
         vertices = new Vector3[vertexH * vertexW];
+        Debug.Log("Allocated " + vertices.Length + " vertices");
         uvs = new Vector2[vertexH * vertexW];
         indexes = new int[(vertexW - 1) * 6 * (vertexH - 1)];
+
+        noise.SetNoiseType(noiseType);
     }
 
     public void BindDataToMesh()
     {
-        Debug.Log("vertices.length : " + vertices.Length + " indexes.length : " + indexes.Length + " uvs.length : " + uvs.Length);
+        Debug.Log("binding == vertices.length : " + vertices.Length + " indexes.length : " + indexes.Length + " uvs.length : " + uvs.Length);
         mesh.vertices = vertices;
         mesh.triangles = indexes;
         mesh.uv = uvs;
