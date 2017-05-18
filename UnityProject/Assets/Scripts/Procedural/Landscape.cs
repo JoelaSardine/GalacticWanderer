@@ -38,8 +38,6 @@ public class Landscape : MonoBehaviour
     private int vertexH;
     private int vertexPerLine;
 
-    public Logger logger = new Logger();
-
 
     private Texture2D generatedTexture;
 
@@ -115,16 +113,8 @@ public class Landscape : MonoBehaviour
         if (mesh == null)
             return;
 
-        try
-        {
-            GenerateVertices();
-            GenerateIndexes();
-        }
-        catch (System.Exception e)
-        {
-            logger.Log(e.Message + "\n" + e.StackTrace.ToString());
-        }
-
+        GenerateVertices();
+        GenerateIndexes();
 
         isReady = true;
     }
@@ -179,7 +169,7 @@ public class Landscape : MonoBehaviour
 
     private void GenerateVertices()
     {
-        logger.Log("generateVertices() : vertices size : " + vertices.Length);
+        Debug.Log("generateVertices() : vertices size : " + vertices.Length);
 
         for (int currentHeight = 0; currentHeight < vertexH; currentHeight++)
         {
@@ -189,7 +179,6 @@ public class Landscape : MonoBehaviour
                 float y = currentHeight / (float) (vertexH - 1) * size;
                 float altitude = heightInterval.Lerp(noise.GetNoise(position.x - size / 2.0f + x, position.z - size / 2.0f + y));
 
-                logger.Log("Trying to set vertices at " + currentWidth + "," + currentHeight);
                 vertices[currentHeight * vertexW + currentWidth].Set(x - size / 2.0f, altitude, y - size / 2.0f);
 
                 float widthRatio = currentWidth / (float) (vertexW - 1);
@@ -197,6 +186,7 @@ public class Landscape : MonoBehaviour
 
                 uvs[currentHeight * vertexW + currentWidth] = new Vector2(widthRatio, heightRatio);
             }
+            Debug.Log("Trying to set vertices at height " + currentHeight);
         }
     }
 

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class WorldBuilder : MonoBehaviour
 {
+    public const int THREAD_COUNT = 2;
     public int size = 4;
     public GameObject landscapePrefab;
     public float chunkSize;
@@ -13,6 +14,7 @@ public class WorldBuilder : MonoBehaviour
     public Landscape[] landscapeArray;
     private float trueChunkSize;
 
+    private LandscapeWorker[] workers;
 
     class LandscapeWorker
     {
@@ -21,8 +23,8 @@ public class WorldBuilder : MonoBehaviour
         private Vector2 atlasSize;
         private Color[] atlasData;
         private Landscape[] landscapeArray;
+        public bool isDone = false;
 
-        public Logger logger = new Logger();
 
         public LandscapeWorker(int index, int threadCount, Landscape[] landscapeArray, Vector2 atlasSize, Color[] atlasData)
         {
@@ -37,12 +39,12 @@ public class WorldBuilder : MonoBehaviour
         {
             int landscapeToProcess = landscapeArray.Length / threadCount;
             int startOffset = threadIndex * landscapeArray.Length / threadCount;
-            logger.Log("Thread " + threadIndex + " started ! (" + landscapeToProcess + " to process");
+            Debug.Log("Thread " + threadIndex + " started ! (" + landscapeToProcess + " to process");
 
 
             for (int j = 0; j < landscapeToProcess; j++)
             {
-                logger.Log("Thread " + threadIndex + " working with landscape " + (startOffset + j));
+                Debug.Log("Thread " + threadIndex + " working with landscape " + (startOffset + j));
                 Landscape landscape = landscapeArray[startOffset + j];
 
                 landscape.atlasWidth = (int)atlasSize.x;
@@ -50,12 +52,22 @@ public class WorldBuilder : MonoBehaviour
                 landscape.atlasTextureData = atlasData;
 
                 landscape.Generate();
-                logger.ConcatAndFlush(landscape.logger);
 
-                logger.Log("After generation : v = " + landscape.vertices.Length);
+                Debug.Log("After generation : v = " + landscape.vertices.Length);
 
                 landscape.InitTexture();
-                logger.Log("Thread " + threadIndex + " is done working with landscape " + (startOffset + j));
+                Debug.Log("Thread " + threadIndex + " is done working with landscape " + (startOffset + j));
+            }
+            isDone = true;
+        }
+
+        public void FinalizeGeneration()
+        {
+            int landscapeToProcess = landscapeArray.Length / threadCount;
+            int startOffset = threadIndex * landscapeArray.Length / threadCount;
+            for (int i = 0; i < landscapeToProcess; i++)
+            {
+                landscapeArray[startOffset + i].BindDataToMesh();
             }
         }
     }
@@ -91,9 +103,10 @@ public class WorldBuilder : MonoBehaviour
 	        }
 	    }
 
-	    // Initialize all landscapes using threads !
-	    Thread[] threadArray = new Thread[4];
-        LandscapeWorker[] workers = new LandscapeWorker[4];
+        // Initialize all landscapes using threads !
+        
+	    Thread[] threadArray = new Thread[THREAD_COUNT];
+        workers = new LandscapeWorker[THREAD_COUNT];
 	    Color[] pixels = atlasTexture.GetPixels();
 	    int atlasHeight = atlasTexture.height;
 	    int atlasWidth = atlasTexture.width;
@@ -104,10 +117,10 @@ public class WorldBuilder : MonoBehaviour
             threadArray[i].Start();
 	    }
 
+        /*
 	    for (int i = 0; i < threadArray.Length; i++)
 	    {
 	        threadArray[i].Join();
-            workers[i].logger.Display();
 	    }
 
 	    // Once the data has been generated we can bind it to unity classes (mesh, texture, etc)
@@ -115,6 +128,19 @@ public class WorldBuilder : MonoBehaviour
 	    {
 	        landscapeArray[i].BindDataToMesh();
 	    }
+        */
 	}
+
+    void Update()
+    {
+        for (int i = 0; i < workers.Length; i++)
+        {
+            if (workers[i].isDone)
+            {
+                workers[i].FinalizeGeneration();
+                workers[i].isDone = false;
+            }
+        }
+    }
 
 }
