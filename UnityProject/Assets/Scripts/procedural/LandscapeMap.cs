@@ -11,7 +11,11 @@ public class LandscapeMap
         private set;
     }
 
-    public LandscapeMap(GameObject root)
+    private int atlasHeight;
+    private int atlasWidth;
+    private Color[] atlasPixels;
+
+    public LandscapeMap(GameObject root, Texture2D atlasTexture)
     {
         // Initialized with a size of 1 then grow until we reach a size of
         // MIN_VIEW_RADIUS
@@ -23,6 +27,11 @@ public class LandscapeMap
 
         Landscape land = InstanciateLandscape(Vector3.zero);
         map.First.Value.AddFirst(land);
+
+        // Copy atlas texture's pixels
+        atlasPixels = atlasTexture.GetPixels();
+        atlasWidth = atlasTexture.width;
+        atlasHeight = atlasTexture.height;
     }
 
     public enum Direction {
@@ -241,7 +250,13 @@ public class LandscapeMap
         GameObject go = new GameObject(name);
         go.transform.SetParent(parent);
         go.transform.position = pos;
-        return go.AddComponent<Landscape>();
+
+        // Get the created landscape and bind atlas texture to it
+        Landscape l = go.AddComponent<Landscape>();
+        l.GetLandscapeData().BindAtlasPixels(atlasPixels, atlasWidth, atlasHeight);
+        l.GetLandscapeData().BindPosition(l.transform.position);
+
+        return l;
     }
 
     public LinkedList<LinkedList<Landscape>> GetMap()

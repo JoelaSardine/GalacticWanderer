@@ -102,7 +102,7 @@ public class LandscapeWorker {
                 Landscape land = PopLandscape();
                 if (land != null)
                 {
-                    land.GetLandscapeData().GenerateMesh(land.nextLOD);
+                    land.GetLandscapeData().GenerateMesh(land.GetLandscapeData().nextLOD);
                     land.isDirty = true;
                     land.isInQueue = false;
                 }

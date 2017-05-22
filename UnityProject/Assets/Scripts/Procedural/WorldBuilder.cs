@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class WorldBuilder : MonoBehaviour
 {
+    [SerializeField]
+    private Texture2D atlasTexture;
+
     Transform playerTransform;
     Vector3 lastDiscretePos;
     LandscapeMap landMap;
@@ -24,6 +27,17 @@ public class WorldBuilder : MonoBehaviour
         }
         playerTransform = player.transform;
 
+        // Dump atlas texture's pixels into pixel array
+        if (atlasTexture == null)
+        {
+            Debug.LogError("Atlas texture shouldn't be null");
+            #if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPaused = true;
+            #else
+                Application.Quit();
+            #endif
+        }
+
         // Instantiates thread pool and workers
         workers = new List<LandscapeWorker>();
         threadPool = new List<Thread>();
@@ -39,7 +53,7 @@ public class WorldBuilder : MonoBehaviour
         lastDiscretePos = WorldToDiscretePosition(playerTransform.position);
 
         // Generate first batch of landscapes
-        landMap = new LandscapeMap(gameObject);
+        landMap = new LandscapeMap(gameObject, atlasTexture);
     }
 
     void Update()
@@ -117,10 +131,10 @@ public class WorldBuilder : MonoBehaviour
             {
                 if (Vector3.SqrMagnitude(land.transform.position - playerTransform.position) <= LOD0Radius * LOD0Radius)
                 {
-                    if (land.currentLOD != 0 && !land.isInQueue && !land.isDirty)
+                    if (land.GetLandscapeData().currentLOD != 0 && !land.isInQueue && !land.isDirty)
                     {
                         // TODO : change LODs management method when we're stable again
-                        land.nextLOD = 0;
+                        land.GetLandscapeData().nextLOD = 0;
                         land.isInQueue = true;
                         workers[workerIndex].PushLandscape(land);
                         workerIndex = (workerIndex + 1) % workers.Count;
@@ -128,9 +142,9 @@ public class WorldBuilder : MonoBehaviour
                 }
                 else
                 {
-                    if (land.currentLOD != 4 && !land.isInQueue)
+                    if (land.GetLandscapeData().currentLOD != 4 && !land.isInQueue)
                     {
-                        land.nextLOD = 4;
+                        land.GetLandscapeData().nextLOD = 4;
                         land.isInQueue = true;
                         workers[workerIndex].PushLandscape(land);
                         workerIndex = (workerIndex + 1) % workers.Count;

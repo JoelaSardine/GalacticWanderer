@@ -32,23 +32,14 @@ public class Landscape : MonoBehaviour
     /// </summary>
     private bool initialized = false;
 
-    /// <summary>
-    /// Next desired LOD for this landscape
-    /// </summary>
-    public int nextLOD;
-
-    /// <summary>
-    /// Current Level Of Details
-    /// </summary>
-    public int currentLOD {
-
+    public string cachedName {
         get;
         private set;
     }
 
-    public string cachedName {
-        get;
-        private set;
+    public Landscape()
+    {
+        landscapeData = new LandscapeData();
     }
 
     void Awake()
@@ -57,8 +48,7 @@ public class Landscape : MonoBehaviour
         renderer = gameObject.AddComponent<MeshRenderer>();
         generatedTexture = new Texture2D(LandscapeConstants.TEXTURE_RESOLUTION, LandscapeConstants.TEXTURE_RESOLUTION);
         generatedTexture.wrapMode = TextureWrapMode.Clamp;
-        landscapeData = new LandscapeData(transform.position);
-        currentLOD = -1;
+        landscapeData.currentLOD = -1;
         cachedName = gameObject.name;
     }
 
@@ -79,9 +69,9 @@ public class Landscape : MonoBehaviour
 
     void ApplyData()
     {
-        currentLOD = nextLOD;
+        landscapeData.currentLOD = landscapeData.nextLOD;
 
-        /**mesh.vertices = landscapeData.vertices;
+        mesh.vertices = landscapeData.vertices;
         mesh.triangles = landscapeData.indexes;
         mesh.uv = landscapeData.UVs;
         mesh.RecalculateNormals();
@@ -93,7 +83,7 @@ public class Landscape : MonoBehaviour
             generatedTexture.Apply();
             renderer.material.mainTexture = generatedTexture;
             initialized = true;
-        }**/
+        }
     }
 
     public LandscapeData GetLandscapeData()
