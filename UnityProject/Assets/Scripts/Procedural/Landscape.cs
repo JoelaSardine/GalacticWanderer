@@ -41,6 +41,7 @@ public class Landscape : MonoBehaviour
     /// Current Level Of Details
     /// </summary>
     public int currentLOD {
+
         get;
         private set;
     }
@@ -50,7 +51,7 @@ public class Landscape : MonoBehaviour
         private set;
     }
 
-    void Start()
+    void Awake()
     {
         mesh = gameObject.AddComponent<MeshFilter>().mesh;
         renderer = gameObject.AddComponent<MeshRenderer>();

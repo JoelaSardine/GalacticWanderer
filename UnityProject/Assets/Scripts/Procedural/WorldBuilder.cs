@@ -96,11 +96,11 @@ public class WorldBuilder : MonoBehaviour
 
         // Handle changes in height
         int deltaY = FindMapSize() - landMap.size;
-        if (deltaY > 0)
+        if (deltaY > 1)
         {
             landMap.Grow();
         }
-        else if (deltaY < 0)
+        else if (deltaY < -1)
         {
             landMap.Shrink();
         }
@@ -128,7 +128,7 @@ public class WorldBuilder : MonoBehaviour
                 }
                 else
                 {
-                    if (land.currentLOD != 4 && !land.isInQueue && !land.isDirty)
+                    if (land.currentLOD != 4 && !land.isInQueue)
                     {
                         land.nextLOD = 4;
                         land.isInQueue = true;
@@ -142,7 +142,7 @@ public class WorldBuilder : MonoBehaviour
 
     int FindMapSize()
     {
-        return (int)Mathf.Lerp(LandscapeConstants.MIN_MAP_SIZE, LandscapeConstants.MAX_MAP_SIZE, playerTransform.position.y / LandscapeConstants.MAX_FLIGHT_HEIGHT);
+        return Mathf.RoundToInt(Mathf.Lerp(LandscapeConstants.MIN_MAP_SIZE, LandscapeConstants.MAX_MAP_SIZE, playerTransform.position.y / LandscapeConstants.MAX_FLIGHT_HEIGHT));
     }
 
 }
