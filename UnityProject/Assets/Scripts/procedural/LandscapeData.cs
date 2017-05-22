@@ -161,10 +161,9 @@ public class LandscapeData {
                             int column = index % LandscapeConstants.ATLAS_COLUMNS;
                             int line = Mathf.FloorToInt(index / (float)(LandscapeConstants.ATLAS_LINES + 1));
 
-                            float cellX = atlasCellWidth * j / (LandscapeConstants.TEXTURE_RESOLUTION - 1);
-                            float cellY = atlasCellHeight * (i / (float)(LandscapeConstants.LANDSCAPE_SIZE - 1));
-
-                            Color pixel = atlasPixels[(int)(line * atlasCellHeight + cellY) * atlasWidth + (int)(column * atlasCellWidth + cellX)];
+                            float cellX = atlasCellWidth * j / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
+                            float cellY = atlasCellHeight * i / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
+                            Color pixel = atlasPixels[(int)(line * atlasCellHeight + cellY) * atlasWidth + (int)(column * atlasCellWidth + cellX)];                         
                             pixels[i * LandscapeConstants.TEXTURE_RESOLUTION + j] = pixel;
                             break;
                         }

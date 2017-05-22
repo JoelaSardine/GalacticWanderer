@@ -81,10 +81,12 @@ public class Landscape : MonoBehaviour
         // Initialize the texture the first time we enter this method
         if (!initialized)
         {
+            initialized = true;
+            landscapeData.GenerateTexture();
             generatedTexture.SetPixels(landscapeData.pixels);
             generatedTexture.Apply();
             renderer.material.mainTexture = generatedTexture;
-            initialized = true;
+            
         }
     }
 
