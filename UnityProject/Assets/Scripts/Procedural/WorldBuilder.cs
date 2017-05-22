@@ -15,7 +15,7 @@ public class WorldBuilder : MonoBehaviour
 
     // TODO : we have to define a LODMax method !
     int lodMax = 3;
-    float LOD0Radius = 100.0f;
+	float LOD0Radius = 100.0f;
 
     void Start()
     {
@@ -67,7 +67,7 @@ public class WorldBuilder : MonoBehaviour
     {
         return new Vector3(
             Mathf.Floor(playerTransform.position.x / LandscapeConstants.LANDSCAPE_SIZE),
-            Mathf.Floor(playerTransform.position.y / LandscapeConstants.DISCRETE_Y_UNIT),
+            Mathf.Floor(playerTransform.position.y / LandscapeConstants.DISCRETE_Y_UNIT), // unused
             Mathf.Floor(playerTransform.position.z / LandscapeConstants.LANDSCAPE_SIZE)
         );
     }
@@ -153,8 +153,9 @@ public class WorldBuilder : MonoBehaviour
             }
         }
     }
-
-    int FindMapSize()
+	
+	/// <summary>Returns the size that the map should have, depending on the player's height.</summary>
+	int FindMapSize()
     {
         return Mathf.RoundToInt(Mathf.Lerp(LandscapeConstants.MIN_MAP_SIZE, LandscapeConstants.MAX_MAP_SIZE, playerTransform.position.y / LandscapeConstants.MAX_FLIGHT_HEIGHT));
     }

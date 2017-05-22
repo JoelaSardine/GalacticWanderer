@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class LandscapeMap
 {
+	/// <summary>GameObject that contains all Landscapes in the scene.</summary>
     private Transform parent;
 	private LinkedList<LinkedList<Landscape>> map;
-    public int size {
+
+	/// <summary>Always must be an odd value.</summary>
+	public int size {
         get;
         private set;
     }
@@ -117,6 +120,7 @@ public class LandscapeMap
 
     public void Shift(Direction dir)
     {
+		// TODO : gather "poped" landscapes and use them as "pushed" ones.
         Push(dir);
         Pop(GetOpposite(dir));
     }
