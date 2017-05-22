@@ -71,6 +71,8 @@ public class Landscape : MonoBehaviour
     {
         landscapeData.currentLOD = landscapeData.nextLOD;
 
+        mesh.Clear();
+
         mesh.vertices = landscapeData.vertices;
         mesh.triangles = landscapeData.indexes;
         mesh.uv = landscapeData.UVs;
