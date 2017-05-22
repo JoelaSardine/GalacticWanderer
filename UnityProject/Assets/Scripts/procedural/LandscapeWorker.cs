@@ -9,6 +9,10 @@ using UnityEngine;
 /// </summary>
 public class LandscapeWorker {
 
+    private static int workerCounts = 0;
+
+    private int id;
+
     /// <summary>
     /// Time to sleep in ms when there are no landscapes in the pipes
     /// </summary>
@@ -29,13 +33,18 @@ public class LandscapeWorker {
     /// </summary>
     bool isOn = true;
 
+    public LandscapeWorker()
+    {
+        id = workerCounts++;
+    }
+
     /// <summary>
     /// Add a landscape to the worker
     /// </summary>
     /// <param name="land"></param>
     public void PushLandscape(Landscape land)
     {
-        Debug.Log("Push : " + land);
+        Debug.Log("Worker " + id + " push : " + land);
         lock (syncLock)
         {
             inputs.Enqueue(land);
@@ -63,12 +72,15 @@ public class LandscapeWorker {
     /// <returns></returns>
     Landscape PopLandscape()
     {
+        int debugCount;
         Landscape l = null;
         lock (syncLock)
         {
             l = inputs.Dequeue();
-            l.isInQueue = false;
+            debugCount = inputs.Count;
         }
+
+        Debug.Log("Worker " + id + " pop : " + l.cachedName + " ( size : " + debugCount + ")");
 
         return l;
     }
@@ -78,7 +90,7 @@ public class LandscapeWorker {
     /// </summary>
     public void ProcessLoop()
     {
-        Debug.Log(GetHashCode() + " worker started ! ");
+        Debug.Log("Worker " + id + " started ! ");
         while (isOn)
         {
             if (QueueIsEmpty())
@@ -92,14 +104,15 @@ public class LandscapeWorker {
                 {
                     land.GetLandscapeData().GenerateMesh(land.nextLOD);
                     land.isDirty = true;
+                    land.isInQueue = false;
                 }
                 else
                 {
-                    Debug.LogError("Landscape shouldn't be null !");
+                    Debug.LogError("Worker " + id + " : Landscape shouldn't be null !");
                 }
             }
         }
-        Debug.Log(GetHashCode() + " worker stopped ! ");
+        Debug.Log("Worker " + id + " stopped ! ");
     }
 
 }

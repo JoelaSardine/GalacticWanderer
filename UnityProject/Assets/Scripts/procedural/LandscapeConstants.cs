@@ -46,5 +46,5 @@ public class LandscapeConstants {
     /// Maximum map diameter
     /// MUST be an ODD number
     /// </summary>
-    public const int MAX_MAP_SIZE = 5;
+    public const int MAX_MAP_SIZE = 4;
 }

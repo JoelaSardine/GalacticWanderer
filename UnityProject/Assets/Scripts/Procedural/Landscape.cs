@@ -45,6 +45,11 @@ public class Landscape : MonoBehaviour
         private set;
     }
 
+    public string cachedName {
+        get;
+        private set;
+    }
+
     void Start()
     {
         mesh = gameObject.AddComponent<MeshFilter>().mesh;
@@ -53,6 +58,7 @@ public class Landscape : MonoBehaviour
         generatedTexture.wrapMode = TextureWrapMode.Clamp;
         landscapeData = new LandscapeData(transform.position);
         currentLOD = -1;
+        cachedName = gameObject.name;
     }
 
     void Update()

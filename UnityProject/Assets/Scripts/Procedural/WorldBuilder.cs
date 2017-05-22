@@ -117,7 +117,7 @@ public class WorldBuilder : MonoBehaviour
             {
                 if (Vector3.SqrMagnitude(land.transform.position - playerTransform.position) <= LOD0Radius * LOD0Radius)
                 {
-                    if (land.currentLOD != 0 && !land.isInQueue)
+                    if (land.currentLOD != 0 && !land.isInQueue && !land.isDirty)
                     {
                         // TODO : change LODs management method when we're stable again
                         land.nextLOD = 0;
@@ -128,7 +128,7 @@ public class WorldBuilder : MonoBehaviour
                 }
                 else
                 {
-                    if (land.currentLOD != 4 && !land.isInQueue)
+                    if (land.currentLOD != 4 && !land.isInQueue && !land.isDirty)
                     {
                         land.nextLOD = 4;
                         land.isInQueue = true;
