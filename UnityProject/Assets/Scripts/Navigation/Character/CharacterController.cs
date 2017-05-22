@@ -72,7 +72,7 @@ public class CharacterController : MonoBehaviour {
     {
         MessageCanvas.gameObject.SetActive(true);
         MessageCanvas.GetComponent<UnityEngine.UI.Text>().text = activable.Message.text; 
-        if(Input.GetKey(KeyCode.E))
+        if(Input.GetKeyUp(KeyCode.E))
         {
             activable.Activate();
         }

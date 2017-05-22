@@ -1,42 +1,148 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Threading;
+using UnityEngine;
 
 public class WorldBuilder : MonoBehaviour
 {
-    public int size = 4;
-    public GameObject landscapePrefab;
-    public float chunkSize;
+    Transform playerTransform;
+    Vector3 lastDiscretePos;
+    LandscapeMap landMap;
+    List<Thread> threadPool;
+    List<LandscapeWorker> workers;
 
-    [HideInInspector]
-    public Landscape[] landscapeArray;
-    private float trueChunkSize;
+    // TODO : we have to define a LODMax method !
+    int lodMax = 3;
+    float LOD0Radius = 100.0f;
 
-	void Start () {
-		landscapeArray = new Landscape[size * size];
+    void Start()
+    {
+        // Find player by its tag
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null)
+        {
+            Debug.LogError("Cannot find Player tag");
+        }
+        playerTransform = player.transform;
 
-	    for (int y = 0; y < size; y++)
-	    {
-	        for (int x = 0; x < size; x++)
-	        {
-	            GameObject landscapeGo = Instantiate(landscapePrefab);
-	            Landscape landscape = landscapeGo.GetComponent<Landscape>();
+        // Instantiates thread pool and workers
+        workers = new List<LandscapeWorker>();
+        threadPool = new List<Thread>();
+        for (int i = 0; i < LandscapeConstants.THREAD_POOL_SIZE; i++)
+        {
+            LandscapeWorker worker = new LandscapeWorker();
+            workers.Add(worker);
+            threadPool.Add(new Thread(worker.ProcessLoop));
+            threadPool[i].Start();
+        }
 
-	            if (landscape == null)
-	            {
-	                Debug.LogError("The instanciated gameobject should have a Landscape component !");
-	            }
-	            else
-	            {
-	                landscapeArray[y * size + x] = landscape;
-	                landscape.size = chunkSize;
+        // Initialize last discrete position with current postion
+        lastDiscretePos = WorldToDiscretePosition(playerTransform.position);
 
-                    landscapeGo.transform.position = new Vector3(x * chunkSize, 0, y * chunkSize);
+        // Generate first batch of landscapes
+        landMap = new LandscapeMap(gameObject);
+    }
 
+    void Update()
+    {
+        UpdateMap();
+        UpdateLODs();
+        LandscapeTrash.Flush();
+    }
 
-	                landscape.Generate();
-	                landscape.InitTexture();
-	                landscape.InitRenderer();
-	            }
-	        }
-	    }
-	}
+    Vector3 WorldToDiscretePosition(Vector3 v)
+    {
+        return new Vector3(
+            Mathf.Floor(playerTransform.position.x / LandscapeConstants.LANDSCAPE_SIZE),
+            Mathf.Floor(playerTransform.position.y / LandscapeConstants.DISCRETE_Y_UNIT),
+            Mathf.Floor(playerTransform.position.z / LandscapeConstants.LANDSCAPE_SIZE)
+        );
+    }
+
+    void UpdateMap()
+    {
+        Vector3 discretePos = WorldToDiscretePosition(playerTransform.position);
+        Vector3 delta = discretePos - lastDiscretePos;
+
+        // Handle changes on the XZ plane
+        if (delta.x > 0)
+        {
+            for (int i = 0; i < delta.x; i++)
+            {
+                landMap.Shift(LandscapeMap.Direction.RIGHT);
+            }
+        }
+        else if (delta.x < 0)
+        {
+            for (int i = 0; i < -delta.x; i++)
+            {
+                landMap.Shift(LandscapeMap.Direction.LEFT);
+            }
+        }
+
+        if (delta.z < 0)
+        {
+            for (int i = 0; i < -delta.z; i++)
+            {
+                landMap.Shift(LandscapeMap.Direction.BACK);
+            }
+        }
+        else if (delta.z > 0)
+        {
+            for (int i = 0; i < delta.z; i++)
+            {
+                landMap.Shift(LandscapeMap.Direction.FRONT);
+            }
+        }
+
+        // Handle changes in height
+        int deltaY = FindMapSize() - landMap.size;
+        if (deltaY > 0)
+        {
+            landMap.Grow();
+        }
+        else if (deltaY < 0)
+        {
+            landMap.Shrink();
+        }
+
+        lastDiscretePos = discretePos;
+    }
+
+    void UpdateLODs()
+    {
+        int workerIndex = 0;
+        foreach (LinkedList<Landscape> line in landMap.GetMap())
+        {
+            foreach (Landscape land in line)
+            {
+                if (Vector3.SqrMagnitude(land.transform.position - playerTransform.position) <= LOD0Radius * LOD0Radius)
+                {
+                    if (land.currentLOD != 0 && !land.isInQueue)
+                    {
+                        // TODO : change LODs management method when we're stable again
+                        land.nextLOD = 0;
+                        land.isInQueue = true;
+                        workers[workerIndex].PushLandscape(land);
+                        workerIndex = (workerIndex + 1) % workers.Count;
+                    }
+                }
+                else
+                {
+                    if (land.currentLOD != 4 && !land.isInQueue)
+                    {
+                        land.nextLOD = 4;
+                        land.isInQueue = true;
+                        workers[workerIndex].PushLandscape(land);
+                        workerIndex = (workerIndex + 1) % workers.Count;
+                    }
+                }
+            }
+        }
+    }
+
+    int FindMapSize()
+    {
+        return (int)Mathf.Lerp(LandscapeConstants.MIN_MAP_SIZE, LandscapeConstants.MAX_MAP_SIZE, playerTransform.position.y / LandscapeConstants.MAX_FLIGHT_HEIGHT);
+    }
+
 }

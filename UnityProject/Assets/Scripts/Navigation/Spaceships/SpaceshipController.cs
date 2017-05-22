@@ -74,7 +74,7 @@ public class SpaceshipController : MonoBehaviour
 		{ // Pencher à droite
 			rigidbody.AddTorque(-transform.forward * rotationSpeed);
 		}
-        if(Input.GetKey(KeyCode.E))
+        if(Input.GetKeyUp(KeyCode.E))
         { // retourner dans le vaisseau
             InsideSpaceShip.gameObject.SetActive(true);
             OutsideSpaceShip.gameObject.SetActive(false);
