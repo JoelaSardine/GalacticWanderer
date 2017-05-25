@@ -7,7 +7,8 @@ using UnityEngine;
 /// Class to use through threads.
 /// The job of this class is to call landscape generation methods.
 /// </summary>
-public class LandscapeWorker {
+public class LandscapeWorker
+{
 
     private static int workerCounts = 0;
 
@@ -44,7 +45,7 @@ public class LandscapeWorker {
     /// <param name="land"></param>
     public void PushLandscape(Landscape land)
     {
-        Debug.Log("Worker " + id + " push : " + land);
+        //Debug.Log("Worker " + id + " push : " + land);
         lock (syncLock)
         {
             inputs.Enqueue(land);
@@ -80,7 +81,7 @@ public class LandscapeWorker {
             debugCount = inputs.Count;
         }
 
-        Debug.Log("Worker " + id + " pop : " + l.cachedName + " ( size : " + debugCount + ")");
+        //Debug.Log("Worker " + id + " pop : " + l.cachedName + " ( size : " + debugCount + ")");
 
         return l;
     }

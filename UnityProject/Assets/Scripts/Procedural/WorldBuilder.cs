@@ -7,6 +7,9 @@ public class WorldBuilder : MonoBehaviour
     [SerializeField]
     private Texture2D atlasTexture;
 
+	[SerializeField]
+	private bool showDebug = false;
+
     Transform playerTransform;
     Vector3 lastDiscretePos;
     LandscapeMap landMap;
@@ -52,7 +55,7 @@ public class WorldBuilder : MonoBehaviour
         // Initialize last discrete position with current postion
         lastDiscretePos = WorldToDiscretePosition(playerTransform.position);
 
-        // Generate first batch of landscapes
+		// Generate first batch of landscapes
         landMap = new LandscapeMap(gameObject, atlasTexture);
     }
 
@@ -66,9 +69,9 @@ public class WorldBuilder : MonoBehaviour
     Vector3 WorldToDiscretePosition(Vector3 v)
     {
         return new Vector3(
-            Mathf.Floor(playerTransform.position.x / LandscapeConstants.LANDSCAPE_SIZE),
-            Mathf.Floor(playerTransform.position.y / LandscapeConstants.DISCRETE_Y_UNIT), // unused
-            Mathf.Floor(playerTransform.position.z / LandscapeConstants.LANDSCAPE_SIZE)
+            Mathf.Floor((playerTransform.position.x + LandscapeConstants.LANDSCAPE_SIZE / 2) / LandscapeConstants.LANDSCAPE_SIZE),
+            Mathf.Floor((playerTransform.position.y + LandscapeConstants.LANDSCAPE_SIZE / 2) / LandscapeConstants.DISCRETE_Y_UNIT), // unused
+            Mathf.Floor((playerTransform.position.z + LandscapeConstants.LANDSCAPE_SIZE / 2) / LandscapeConstants.LANDSCAPE_SIZE)
         );
     }
 
@@ -159,5 +162,20 @@ public class WorldBuilder : MonoBehaviour
     {
         return Mathf.RoundToInt(Mathf.Lerp(LandscapeConstants.MIN_MAP_SIZE, LandscapeConstants.MAX_MAP_SIZE, playerTransform.position.y / LandscapeConstants.MAX_FLIGHT_HEIGHT));
     }
+	
+	void OnDrawGizmos()
+	{
+		if (showDebug)
+		{
+			Gizmos.color = new Color(0, 1, 1, 0.75f);
 
+			foreach (LinkedList<Landscape> line in landMap.GetMap())
+			{
+				foreach (Landscape land in line)
+				{
+					Gizmos.DrawCube(land.transform.position, new Vector3(LandscapeConstants.LANDSCAPE_SIZE * 0.8f, 1, LandscapeConstants.LANDSCAPE_SIZE * 0.8f));
+				}
+			}
+		}
+	}
 }

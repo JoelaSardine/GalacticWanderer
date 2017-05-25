@@ -2,7 +2,7 @@
 
 public class SpaceshipController : MonoBehaviour
 {
-	new Rigidbody rigidbody;
+	private Rigidbody rb;
 
 	public float rotationSpeed;
 	public float acceleration;
@@ -17,7 +17,7 @@ public class SpaceshipController : MonoBehaviour
 
 	void Awake()
 	{
-		rigidbody = GetComponent<Rigidbody>();
+		rb = GetComponent<Rigidbody>();
 	}
 	
 	void Update()
@@ -41,38 +41,38 @@ public class SpaceshipController : MonoBehaviour
 
 		if (Input.GetKey(KeyCode.Z))
 		{ // Accélérer
-			rigidbody.AddForce(transform.forward * currentAcceleration);
+			rb.AddForce(transform.forward * currentAcceleration);
 		}
 		if (Input.GetKey(KeyCode.S))
 		{ // Freiner
-			rigidbody.AddForce(-transform.forward * currentAcceleration);
+			rb.AddForce(-transform.forward * currentAcceleration);
 		}
 
 		if (Input.GetKey(KeyCode.UpArrow))
 		{ // Plonger
-			rigidbody.AddTorque(transform.right * rotationSpeed);
+			rb.AddTorque(transform.right * rotationSpeed);
 		}
 		if (Input.GetKey(KeyCode.DownArrow))
 		{ // Redresser
-			rigidbody.AddTorque(-transform.right * rotationSpeed);
+			rb.AddTorque(-transform.right * rotationSpeed);
 		}
 
-		if (Input.GetKey(KeyCode.LeftArrow))
+		if (Input.GetKey(KeyCode.Q))
 		{ // Tourner à gauche 
-			rigidbody.AddTorque(-transform.up * rotationSpeed);
+			rb.AddTorque(-transform.up * rotationSpeed);
 		}
-		if (Input.GetKey(KeyCode.RightArrow))
+		if (Input.GetKey(KeyCode.D))
 		{ // Tourner à droite
-			rigidbody.AddTorque(transform.up * rotationSpeed);
+			rb.AddTorque(transform.up * rotationSpeed);
 		}
 
 		if (Input.GetKey(KeyCode.LeftArrow))
 		{ // Pencher à gauche 
-			rigidbody.AddTorque(transform.forward * rotationSpeed);
+			rb.AddTorque(transform.forward * rotationSpeed);
 		}
 		if (Input.GetKey(KeyCode.RightArrow))
 		{ // Pencher à droite
-			rigidbody.AddTorque(-transform.forward * rotationSpeed);
+			rb.AddTorque(-transform.forward * rotationSpeed);
 		}
         if(Input.GetKeyUp(KeyCode.E))
         { // retourner dans le vaisseau
@@ -83,7 +83,7 @@ public class SpaceshipController : MonoBehaviour
 
     void ToggleEngine(bool toggle)
     {
-        rigidbody.useGravity = !toggle;
+        rb.useGravity = !toggle;
         _particle1.SetActive(toggle);
         _particle2.SetActive(toggle);
     }

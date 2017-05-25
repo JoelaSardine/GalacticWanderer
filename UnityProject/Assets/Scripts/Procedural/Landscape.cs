@@ -61,12 +61,6 @@ public class Landscape : MonoBehaviour
         }
     }
 
-    void OnDrawGizmos()
-    {
-        Gizmos.color = new Color(1, 0, 0, 0.9f);
-        Gizmos.DrawCube(transform.position, new Vector3(LandscapeConstants.LANDSCAPE_SIZE * 0.9f, 1, LandscapeConstants.LANDSCAPE_SIZE * 0.9f));
-    }
-
     void ApplyData()
     {
         landscapeData.currentLOD = landscapeData.nextLOD;

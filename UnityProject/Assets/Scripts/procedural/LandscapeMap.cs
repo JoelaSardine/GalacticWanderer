@@ -25,16 +25,16 @@ public class LandscapeMap
         size = 1;
         parent = root.transform;
 
-        map = new LinkedList<LinkedList<Landscape>>();
+		// Copy atlas texture's pixels
+		atlasPixels = atlasTexture.GetPixels();
+		atlasWidth = atlasTexture.width;
+		atlasHeight = atlasTexture.height;
+
+		map = new LinkedList<LinkedList<Landscape>>();
         map.AddFirst(new LinkedList<Landscape>());
 
         Landscape land = InstanciateLandscape(Vector3.zero);
         map.First.Value.AddFirst(land);
-
-        // Copy atlas texture's pixels
-        atlasPixels = atlasTexture.GetPixels();
-        atlasWidth = atlasTexture.width;
-        atlasHeight = atlasTexture.height;
     }
 
     public enum Direction {

@@ -83,7 +83,8 @@ public class LandscapeData {
 
     private void GenerateVertices()
     {
-        Debug.Log("generateVertices() : vertices size : " + vertices.Length);
+		//System.Text.StringBuilder sb = new System.Text.StringBuilder();
+		//sb.AppendLine("generateVertices() : vertices size : " + vertices.Length);
 
         for (int currentHeight = 0; currentHeight < vertexH; currentHeight++)
         {
@@ -99,9 +100,10 @@ public class LandscapeData {
                 float heightRatio = currentHeight / (float)(vertexH - 1);
 
                 UVs[currentHeight * vertexW + currentWidth] = new Vector2(widthRatio, heightRatio);
-            }
-            Debug.Log("Trying to set vertices at height " + currentHeight);
+			}
+			//sb.AppendLine("Height " + currentHeight + " have been generated.");
         }
+		//Debug.Log(sb);
     }
 
     private void GenerateIndexes()
@@ -140,36 +142,71 @@ public class LandscapeData {
     // Pre : mesh already generated
     public void GenerateTexture()
     {
-        if (pixels != null)
-        {
-            float atlasCellWidth = atlasWidth / (float)LandscapeConstants.ATLAS_COLUMNS;
-            float atlasCellHeight = atlasHeight / (float)LandscapeConstants.ATLAS_LINES;
+		if (pixels != null || atlasPixels != null)
+		{
+			System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
-            for (int i = 0; i < LandscapeConstants.TEXTURE_RESOLUTION; i++)
-            {
-                for (int j = 0; j < LandscapeConstants.TEXTURE_RESOLUTION; j++)
-                {
-                    float x = j / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1) * LandscapeConstants.LANDSCAPE_SIZE;
-                    float y = i / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1) * LandscapeConstants.LANDSCAPE_SIZE;
-                    float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeConstants.NOISE.GetNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
+			float atlasCellWidth = atlasWidth / (float)LandscapeConstants.ATLAS_COLUMNS;
+			float atlasCellHeight = atlasHeight / (float)LandscapeConstants.ATLAS_LINES;
 
-                    for (int index = 0; index < LandscapeConstants.BIOMES_HEIGHT.Length; index++)
-                    {
-                        Interval interval = LandscapeConstants.BIOMES_HEIGHT[index];
-                        if (interval.Contains(altitude))
-                        {
-                            int column = index % LandscapeConstants.ATLAS_COLUMNS;
-                            int line = Mathf.FloorToInt(index / (float)(LandscapeConstants.ATLAS_LINES + 1));
+			for (int i = 0; i < LandscapeConstants.TEXTURE_RESOLUTION; i++)
+			{
+				for (int j = 0; j < LandscapeConstants.TEXTURE_RESOLUTION; j++)
+				{
+					float x = j / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1) * LandscapeConstants.LANDSCAPE_SIZE;
+					float y = i / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1) * LandscapeConstants.LANDSCAPE_SIZE;
+					float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeConstants.NOISE.GetNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
 
-                            float cellX = atlasCellWidth * j / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
-                            float cellY = atlasCellHeight * i / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
-                            Color pixel = atlasPixels[(int)(line * atlasCellHeight + cellY) * atlasWidth + (int)(column * atlasCellWidth + cellX)];                         
-                            pixels[i * LandscapeConstants.TEXTURE_RESOLUTION + j] = pixel;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
+					for (int index = 0; index < LandscapeConstants.BIOMES_HEIGHT.Length; index++)
+					{
+						Interval interval = LandscapeConstants.BIOMES_HEIGHT[index];
+						if (interval.Contains(altitude))
+						{
+							int column = index % LandscapeConstants.ATLAS_COLUMNS;
+							int line = Mathf.FloorToInt(index / (float)(LandscapeConstants.ATLAS_LINES + 1));
+
+							float cellX = atlasCellWidth * j / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
+							float cellY = atlasCellHeight * i / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
+							int pixX = (int)(column * atlasCellWidth + cellX);
+							int pixY = (int)(line * atlasCellHeight + cellY);
+							if (pixY * atlasWidth + pixX >= atlasPixels.Length)
+							{
+								sb.AppendLine("TOO HIGH : trying to get pixel " 
+									+ pixY + " * " + atlasWidth + " + " + pixX + " = "
+									+ (pixY * atlasWidth + pixX)
+									+ " but atlas size is " + atlasPixels.Length);
+								break;
+							}
+							Color pixel = atlasPixels[pixY * atlasWidth + pixX];
+							if (i * LandscapeConstants.TEXTURE_RESOLUTION + j >= pixels.Length)
+							{
+								sb.AppendLine("TOO HIGH : trying to set pixel " 
+									+ i + " * " + LandscapeConstants.TEXTURE_RESOLUTION + " + " + j + " = "
+									+ (i * LandscapeConstants.TEXTURE_RESOLUTION + j)
+									+ " but array size is " + pixels.Length);
+								break;
+							}
+							pixels[i * LandscapeConstants.TEXTURE_RESOLUTION + j] = pixel;
+							break;
+						}
+					}
+				}
+			}
+			if (sb.Length > 0)
+			{
+				Debug.LogError(sb);
+			}
+		}
+		else
+		{
+			if (pixels == null)
+			{
+				Debug.LogError("Pixels is null for landscape at " + position);
+			}
+			if (atlasPixels == null)
+			{
+				Debug.LogError("AtlasPixels is null for landscape at " + position);
+			}
+		}
+	}
 }
