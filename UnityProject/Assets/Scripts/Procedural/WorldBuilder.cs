@@ -7,8 +7,8 @@ public class WorldBuilder : MonoBehaviour
     [SerializeField]
     private Texture2D atlasTexture;
 
-	[SerializeField]
-	private bool showDebug = false;
+    [SerializeField]
+    private bool showDebug = false;
 
     Transform playerTransform;
     Vector3 lastDiscretePos;
@@ -18,7 +18,7 @@ public class WorldBuilder : MonoBehaviour
 
     // TODO : we have to define a LODMax method !
     int lodMax = 3;
-	float LOD0Radius = 100.0f;
+    float LODRadius = 100.0f;
 
     void Start()
     {
@@ -34,11 +34,11 @@ public class WorldBuilder : MonoBehaviour
         if (atlasTexture == null)
         {
             Debug.LogError("Atlas texture shouldn't be null");
-            #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPaused = true;
-            #else
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPaused = true;
+#else
                 Application.Quit();
-            #endif
+#endif
         }
 
         // Instantiates thread pool and workers
@@ -55,7 +55,7 @@ public class WorldBuilder : MonoBehaviour
         // Initialize last discrete position with current postion
         lastDiscretePos = WorldToDiscretePosition(playerTransform.position);
 
-		// Generate first batch of landscapes
+        // Generate first batch of landscapes
         landMap = new LandscapeMap(gameObject, atlasTexture);
     }
 
@@ -133,58 +133,55 @@ public class WorldBuilder : MonoBehaviour
             foreach (Landscape land in line)
             {
                 float radius = Vector3.SqrMagnitude(land.transform.position - playerTransform.position);
-                if (radius <= LOD0Radius * LOD0Radius)
+                int newLod = getLandLOD(radius);
+                if (land.GetLandscapeData().currentLOD != newLod && !land.isInQueue && !land.isDirty)
                 {
-                    if (land.GetLandscapeData().currentLOD != 0 && !land.isInQueue && !land.isDirty)
-                    {
-                        // TODO : change LODs management method when we're stable again
-                        land.GetLandscapeData().nextLOD = 0;
-                        land.isInQueue = true;
-                        workers[workerIndex].PushLandscape(land);
-                        workerIndex = (workerIndex + 1) % workers.Count;
-                    }
-                }
-                else
-                {
-                    int newLod = Mathf.RoundToInt(radius / (LOD0Radius * LOD0Radius));
-                    if (land.GetLandscapeData().currentLOD != LandscapeConstants.LOD_MAX && !land.isInQueue && newLod >= LandscapeConstants.LOD_MAX)
-                    {
-                        land.GetLandscapeData().nextLOD = LandscapeConstants.LOD_MAX;
-                        land.isInQueue = true;
-                        workers[workerIndex].PushLandscape(land);
-                        workerIndex = (workerIndex + 1) % workers.Count;
-                    }
-                    else if(land.GetLandscapeData().currentLOD != newLod && !land.isInQueue)
-                    {
-                        land.GetLandscapeData().nextLOD = newLod;
-                        land.isInQueue = true;
-                        workers[workerIndex].PushLandscape(land);
-                        workerIndex = (workerIndex + 1) % workers.Count;
-                    }
+                    land.GetLandscapeData().nextLOD = newLod;
+                    land.isInQueue = true;
+                    workers[workerIndex].PushLandscape(land);
+                    workerIndex = (workerIndex + 1) % workers.Count;
                 }
             }
         }
     }
-	
-	/// <summary>Returns the size that the map should have, depending on the player's height.</summary>
-	int FindMapSize()
+
+    /// <summary>Returns the LOD of a landscape function of his radius. Linear </summary>
+    int getLandLOD(float radius)
+    {
+        if (radius <= LODRadius * LODRadius)
+        {
+            return 0;
+        }
+        else
+        {
+            int newLod = Mathf.RoundToInt(radius / (LODRadius * LODRadius));
+            if (newLod >= LandscapeConstants.LOD_MAX)
+            {
+                return LandscapeConstants.LOD_MAX;
+            }
+            else return newLod;
+        }
+    }
+
+    /// <summary>Returns the size that the map should have, depending on the player's height.</summary>
+    int FindMapSize()
     {
         return Mathf.RoundToInt(Mathf.Lerp(LandscapeConstants.MIN_MAP_SIZE, LandscapeConstants.MAX_MAP_SIZE, playerTransform.position.y / LandscapeConstants.MAX_FLIGHT_HEIGHT));
     }
-	
-	void OnDrawGizmos()
-	{
-		if (showDebug)
-		{
-			Gizmos.color = new Color(0, 1, 1, 0.75f);
 
-			foreach (LinkedList<Landscape> line in landMap.GetMap())
-			{
-				foreach (Landscape land in line)
-				{
-					Gizmos.DrawCube(land.transform.position, new Vector3(LandscapeConstants.LANDSCAPE_SIZE * 0.8f, 1, LandscapeConstants.LANDSCAPE_SIZE * 0.8f));
-				}
-			}
-		}
-	}
+    void OnDrawGizmos()
+    {
+        if (showDebug)
+        {
+            Gizmos.color = new Color(0, 1, 1, 0.75f);
+
+            foreach (LinkedList<Landscape> line in landMap.GetMap())
+            {
+                foreach (Landscape land in line)
+                {
+                    Gizmos.DrawCube(land.transform.position, new Vector3(LandscapeConstants.LANDSCAPE_SIZE * 0.8f, 1, LandscapeConstants.LANDSCAPE_SIZE * 0.8f));
+                }
+            }
+        }
+    }
 }
