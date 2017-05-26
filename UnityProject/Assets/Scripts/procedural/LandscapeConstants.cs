@@ -9,6 +9,7 @@ public class LandscapeConstants {
     public const float LANDSCAPE_SIZE = 100.0f;
 
     // TODO : we need LOD_MAX
+    public const int LOD_MAX = 10;
 
     public static readonly Interval HEIGHT_INTERVAL = new Interval(-100, 100);
     public static readonly Interval[] BIOMES_HEIGHT =
