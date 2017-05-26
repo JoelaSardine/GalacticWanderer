@@ -30,7 +30,11 @@ public class Landscape : MonoBehaviour
     /// <summary>
     /// When false, this means we have to initialized this mesh's texture
     /// </summary>
-    private bool initialized = false;
+    public bool initialized
+    {
+        get;
+        private set;
+    }
 
     public string cachedName {
         get;
@@ -39,6 +43,7 @@ public class Landscape : MonoBehaviour
 
     public Landscape()
     {
+        initialized = false;
         landscapeData = new LandscapeData();
     }
 
@@ -76,7 +81,6 @@ public class Landscape : MonoBehaviour
         if (!initialized)
         {
             initialized = true;
-            landscapeData.GenerateTexture();
             generatedTexture.SetPixels(landscapeData.pixels);
             generatedTexture.Apply();
             renderer.material.mainTexture = generatedTexture;

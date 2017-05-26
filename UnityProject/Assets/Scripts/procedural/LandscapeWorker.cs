@@ -104,6 +104,12 @@ public class LandscapeWorker
                 if (land != null)
                 {
                     land.GetLandscapeData().GenerateMesh(land.GetLandscapeData().nextLOD);
+
+                    if (!land.initialized)
+                    {
+                        land.GetLandscapeData().GenerateTexture();
+                    }
+
                     land.isDirty = true;
                     land.isInQueue = false;
                 }
