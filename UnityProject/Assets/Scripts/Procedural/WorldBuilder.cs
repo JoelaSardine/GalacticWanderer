@@ -132,7 +132,8 @@ public class WorldBuilder : MonoBehaviour
         {
             foreach (Landscape land in line)
             {
-                if (Vector3.SqrMagnitude(land.transform.position - playerTransform.position) <= LOD0Radius * LOD0Radius)
+                float radius = Vector3.SqrMagnitude(land.transform.position - playerTransform.position);
+                if (radius <= LOD0Radius * LOD0Radius)
                 {
                     if (land.GetLandscapeData().currentLOD != 0 && !land.isInQueue && !land.isDirty)
                     {
@@ -145,9 +146,17 @@ public class WorldBuilder : MonoBehaviour
                 }
                 else
                 {
-                    if (land.GetLandscapeData().currentLOD != 4 && !land.isInQueue)
+                    int newLod = Mathf.RoundToInt(radius / (LOD0Radius * LOD0Radius));
+                    if (land.GetLandscapeData().currentLOD != LandscapeConstants.LOD_MAX && !land.isInQueue && newLod >= LandscapeConstants.LOD_MAX)
                     {
-                        land.GetLandscapeData().nextLOD = 4;
+                        land.GetLandscapeData().nextLOD = LandscapeConstants.LOD_MAX;
+                        land.isInQueue = true;
+                        workers[workerIndex].PushLandscape(land);
+                        workerIndex = (workerIndex + 1) % workers.Count;
+                    }
+                    else if(land.GetLandscapeData().currentLOD != newLod && !land.isInQueue)
+                    {
+                        land.GetLandscapeData().nextLOD = newLod;
                         land.isInQueue = true;
                         workers[workerIndex].PushLandscape(land);
                         workerIndex = (workerIndex + 1) % workers.Count;
