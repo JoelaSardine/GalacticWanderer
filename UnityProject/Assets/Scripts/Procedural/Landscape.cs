@@ -42,6 +42,8 @@ public class Landscape : FastPriorityQueueNode
     /// </summary>
     public bool isGeneratingMesh = false;
 
+    public int workerIndex = -1;
+
     public string cachedName {
         get;
         private set;

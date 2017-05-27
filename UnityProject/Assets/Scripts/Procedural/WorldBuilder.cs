@@ -127,9 +127,13 @@ public class WorldBuilder : MonoBehaviour
 
     float GetAngleFromPlayerForward(Vector3 pos)
     {
-        return Vector2.Angle(
-            new Vector2(playerTransform.position.x, playerTransform.position.z),
-            new Vector2(pos.x, pos.z));
+        Vector3 playerForward = new Vector3(playerTransform.position.x + playerTransform.forward.x, playerTransform.position.z + playerTransform.forward.z, 0);
+        Vector3 landscapeDir = new Vector3(pos.x - playerTransform.position.x, pos.z - playerTransform.position.z, 0);
+        
+        float angle = Vector3.Angle(playerForward, landscapeDir);
+        float sign = Mathf.Sign(Vector3.Dot(landscapeDir, playerTransform.right));
+
+        return sign * angle;
     }
 
     void UpdateLODs()
@@ -141,17 +145,29 @@ public class WorldBuilder : MonoBehaviour
             {
                 float radius = Vector3.SqrMagnitude(land.transform.position - playerTransform.position);
                 float angleFromPlayerForward = GetAngleFromPlayerForward(land.transform.position);
-                int newLod = getLandLOD(radius);
+                int newLod = getLandLOD(radius, angleFromPlayerForward);
                 
                 if (land.GetLandscapeData().currentLOD != newLod && !land.isDirty)
                 {
                     if (!land.isGeneratingMesh)
                     {
-                        land.GetLandscapeData().nextLOD = newLod;
 
-                        if (!land.isInQueue)
+                        if (land.isInQueue)
+                        {
+                            if (land.workerIndex != -1)
+                            {
+                                workers[land.workerIndex].UpdateLandscapePriorityAndLOD(land, newLod, radius, angleFromPlayerForward);
+                            }
+                            else
+                            {
+                                Debug.LogError("Worker index is negative");
+                            }
+                        }
+                        else
                         {
                             land.isInQueue = true;
+                            land.workerIndex = workerIndex;
+                            land.GetLandscapeData().nextLOD = newLod;
                             workers[workerIndex].PushLandscape(land, radius, angleFromPlayerForward);
                             workerIndex = (workerIndex + 1) % workers.Count;                            
                         }
@@ -161,22 +177,30 @@ public class WorldBuilder : MonoBehaviour
         }
     }
 
-    /// <summary>Returns the LOD of a landscape function of his radius. Linear </summary>
-    int getLandLOD(float radius)
+    /// <summary>
+    /// Returns the LOD of a landscape based on its distance to the player pos
+    /// and whether or not the landscape is in player's sight
+    /// </summary>
+    int getLandLOD(float distanceToPlayer, float landAngleFromPlayerForward)
     {
-        if (radius <= LODRadius * LODRadius)
+        if (distanceToPlayer <= LODRadius * LODRadius)
         {
             return 0;
         }
-        else
+
+        if (landAngleFromPlayerForward >= -30.0f && landAngleFromPlayerForward <= 30.0f &&
+            distanceToPlayer <= LODRadius * LODRadius * 10)
         {
-            int newLod = Mathf.RoundToInt(radius / (LODRadius * LODRadius));
-            if (newLod >= LandscapeConstants.LOD_MAX)
-            {
-                return LandscapeConstants.LOD_MAX;
-            }
-            else return newLod;
+            return 0;
         }
+
+        int newLod = Mathf.RoundToInt(distanceToPlayer / (LODRadius * LODRadius));
+        if (newLod >= LandscapeConstants.LOD_MAX)
+        {
+            return LandscapeConstants.LOD_MAX;
+        }
+        
+        return newLod;
     }
 
     /// <summary>Returns the size that the map should have, depending on the player's height.</summary>

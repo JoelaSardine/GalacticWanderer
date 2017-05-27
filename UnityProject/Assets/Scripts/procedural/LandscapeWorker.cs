@@ -65,7 +65,17 @@ public class LandscapeWorker
 
     float GetPriorityFromDistanceAndAngle(float sqrDistanceFromPlayer, float angleFromPlayerForward)
     {
-        return sqrDistanceFromPlayer * 0.1f + angleFromPlayerForward * angleFromPlayerForward;
+        float anglePriority;
+        if (angleFromPlayerForward >= -30.0f && angleFromPlayerForward <= 30.0f)
+        {
+            anglePriority = -800;
+        }
+        else
+        {
+            anglePriority = 800;
+        }
+        
+        return sqrDistanceFromPlayer * 0.1f + anglePriority;
     }
 
     /// <summary>
