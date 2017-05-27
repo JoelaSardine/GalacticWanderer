@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using GalacticWanderer.Managers;
 
 public class CharacterController : MonoBehaviour {
 
@@ -59,7 +60,11 @@ public class CharacterController : MonoBehaviour {
             activable = Target.GetComponent<ActivableObject>();
             if (activable!=null)
             {
-                Activable(Target);
+				if (Input.GetKeyUp(KeyCode.E))
+				{
+					GameManager.instance.SetPhase(GamePhase.OnPlanet);
+				}
+                //Activable(Target);
             }
         }
         else

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using GalacticWanderer.Managers;
 
 public class SpaceshipController : MonoBehaviour
 {
@@ -76,8 +77,11 @@ public class SpaceshipController : MonoBehaviour
 		}
         if(Input.GetKeyUp(KeyCode.E))
         { // retourner dans le vaisseau
+			GameManager.instance.SetPhase(GamePhase.InsideShip);
+			/*
             InsideSpaceShip.gameObject.SetActive(true);
             OutsideSpaceShip.gameObject.SetActive(false);
+			*/
         }
 	}
 
