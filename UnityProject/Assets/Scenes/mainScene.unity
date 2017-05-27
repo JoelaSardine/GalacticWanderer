@@ -149,6 +149,10 @@ Prefab:
       propertyPath: m_TagString
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 1619451192193036, guid: 0782c52a70b1e714daf6fc6f8ba03a03, type: 2}
+      propertyPath: m_TagString
+      value: Untagged
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 0782c52a70b1e714daf6fc6f8ba03a03, type: 2}
   m_IsPrefabParent: 0
@@ -278,7 +282,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0375ded6fb1bc940b0b6e3735f88cda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  atlasTexture: {fileID: 2800000, guid: ff28b1bc5fa71574d9a19a7aa8fe60dc, type: 3}
+  atlasTexture: {fileID: 2800000, guid: 0244cda00e24b6e41b0a4f234e544c13, type: 3}
+  showDebug: 0
 --- !u!4 &1524371184
 Transform:
   m_ObjectHideFlags: 0

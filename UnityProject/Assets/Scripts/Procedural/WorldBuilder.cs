@@ -16,8 +16,6 @@ public class WorldBuilder : MonoBehaviour
     List<Thread> threadPool;
     List<LandscapeWorker> workers;
 
-    // TODO : we have to define a LODMax method !
-    int lodMax = 3;
     float LODRadius = 100.0f;
 
     void Start()
@@ -125,6 +123,14 @@ public class WorldBuilder : MonoBehaviour
         lastDiscretePos = discretePos;
     }
 
+    float GetAngleFromPlayerForward(Vector3 pos)
+    {
+        Vector3 playerForward = new Vector3(playerTransform.forward.x, 0.0f, playerTransform.forward.z);
+        Vector3 landscapeDir = new Vector3(pos.x - playerTransform.position.x, 0.0f, pos.z - playerTransform.position.z);
+        
+        return Vector3.Angle(playerForward, landscapeDir);
+    }
+
     void UpdateLODs()
     {
         int workerIndex = 0;
@@ -133,34 +139,63 @@ public class WorldBuilder : MonoBehaviour
             foreach (Landscape land in line)
             {
                 float radius = Vector3.SqrMagnitude(land.transform.position - playerTransform.position);
-                int newLod = getLandLOD(radius);
-                if (land.GetLandscapeData().currentLOD != newLod && !land.isInQueue && !land.isDirty)
+                float angleFromPlayerForward = GetAngleFromPlayerForward(land.transform.position);
+                int newLod = GetLandLOD(radius, angleFromPlayerForward);
+                
+                if (land.GetLandscapeData().currentLOD != newLod && !land.isDirty)
                 {
-                    land.GetLandscapeData().nextLOD = newLod;
-                    land.isInQueue = true;
-                    workers[workerIndex].PushLandscape(land);
-                    workerIndex = (workerIndex + 1) % workers.Count;
+                    if (!land.isGeneratingMesh)
+                    {
+
+                        if (land.isInQueue)
+                        {
+                            if (land.workerIndex != -1)
+                            {
+                                workers[land.workerIndex].UpdateLandscapePriorityAndLOD(land, newLod, radius, angleFromPlayerForward);
+                            }
+                            else
+                            {
+                                Debug.LogError("Worker index is negative");
+                            }
+                        }
+                        else
+                        {
+                            land.isInQueue = true;
+                            land.workerIndex = workerIndex;
+                            land.GetLandscapeData().nextLOD = newLod;
+                            workers[workerIndex].PushLandscape(land, radius, angleFromPlayerForward);
+                            workerIndex = (workerIndex + 1) % workers.Count;                            
+                        }
+                    }
                 }
             }
         }
     }
 
-    /// <summary>Returns the LOD of a landscape function of his radius. Linear </summary>
-    int getLandLOD(float radius)
+    /// <summary>
+    /// Returns the LOD of a landscape based on its distance to the player pos
+    /// and whether or not the landscape is in player's sight
+    /// </summary>
+    int GetLandLOD(float distanceToPlayer, float landAngleFromPlayerForward)
     {
-        if (radius <= LODRadius * LODRadius)
+
+        float fieldOdViewFactor;
+        if (landAngleFromPlayerForward <= 90.0f)
         {
-            return 0;
+            fieldOdViewFactor = 0.1f;
         }
         else
         {
-            int newLod = Mathf.RoundToInt(radius / (LODRadius * LODRadius));
-            if (newLod >= LandscapeConstants.LOD_MAX)
-            {
-                return LandscapeConstants.LOD_MAX;
-            }
-            else return newLod;
+            fieldOdViewFactor = 100.0f;
         }
+
+        int newLod = Mathf.RoundToInt(fieldOdViewFactor * distanceToPlayer / (LODRadius * LODRadius));
+        if (newLod >= LandscapeConstants.LOD_MAX)
+        {
+            return LandscapeConstants.LOD_MAX;
+        }
+        
+        return newLod;
     }
 
     /// <summary>Returns the size that the map should have, depending on the player's height.</summary>
