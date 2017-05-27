@@ -22,6 +22,7 @@ namespace GalacticWanderer.Managers
 
 		public ShipManager shipManager;
 		public WorldManager worldManager;
+		public MenuManager menuManager;
 
 		private void Awake()
 		{
