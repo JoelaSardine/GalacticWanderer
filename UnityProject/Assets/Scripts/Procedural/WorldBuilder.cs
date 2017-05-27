@@ -125,6 +125,13 @@ public class WorldBuilder : MonoBehaviour
         lastDiscretePos = discretePos;
     }
 
+    float GetAngleFromPlayerForward(Vector3 pos)
+    {
+        return Vector2.Angle(
+            new Vector2(playerTransform.position.x, playerTransform.position.z),
+            new Vector2(pos.x, pos.z));
+    }
+
     void UpdateLODs()
     {
         int workerIndex = 0;
@@ -133,13 +140,22 @@ public class WorldBuilder : MonoBehaviour
             foreach (Landscape land in line)
             {
                 float radius = Vector3.SqrMagnitude(land.transform.position - playerTransform.position);
+                float angleFromPlayerForward = GetAngleFromPlayerForward(land.transform.position);
                 int newLod = getLandLOD(radius);
-                if (land.GetLandscapeData().currentLOD != newLod && !land.isInQueue && !land.isDirty)
+                
+                if (land.GetLandscapeData().currentLOD != newLod && !land.isDirty)
                 {
-                    land.GetLandscapeData().nextLOD = newLod;
-                    land.isInQueue = true;
-                    workers[workerIndex].PushLandscape(land);
-                    workerIndex = (workerIndex + 1) % workers.Count;
+                    if (!land.isGeneratingMesh)
+                    {
+                        land.GetLandscapeData().nextLOD = newLod;
+
+                        if (!land.isInQueue)
+                        {
+                            land.isInQueue = true;
+                            workers[workerIndex].PushLandscape(land, radius, angleFromPlayerForward);
+                            workerIndex = (workerIndex + 1) % workers.Count;                            
+                        }
+                    }
                 }
             }
         }

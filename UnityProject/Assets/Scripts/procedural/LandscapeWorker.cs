@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using Priority_Queue;
 using UnityEngine;
 
 /// <summary>
@@ -27,7 +28,7 @@ public class LandscapeWorker
     /// <summary>
     /// Landscape input pipeline
     /// </summary>
-    Queue<Landscape> inputs = new Queue<Landscape>();
+    FastPriorityQueue<Landscape> inputs = new FastPriorityQueue<Landscape>(400);
 
     /// <summary>
     /// Simple switch to turn off the worker and close its calling thread
@@ -43,13 +44,28 @@ public class LandscapeWorker
     /// Add a landscape to the worker
     /// </summary>
     /// <param name="land"></param>
-    public void PushLandscape(Landscape land)
+    public void PushLandscape(Landscape land, float sqrDistanceFromPlayer, float angleFromPlayerForward)
     {
-        //Debug.Log("Worker " + id + " push : " + land);
+        float priority = GetPriorityFromDistanceAndAngle(sqrDistanceFromPlayer,angleFromPlayerForward);
         lock (syncLock)
         {
-            inputs.Enqueue(land);
+            inputs.Enqueue(land, priority);
         }
+    }
+
+    public void UpdateLandscapePriorityAndLOD(Landscape land, int lod, float sqrDistanceFromPlayer, float angleFromPlayerForward)
+    {
+        float priority = GetPriorityFromDistanceAndAngle(sqrDistanceFromPlayer,angleFromPlayerForward);
+        lock (syncLock)
+        {
+            land.GetLandscapeData().nextLOD = lod;
+            inputs.UpdatePriority(land, priority);
+        }        
+    }
+
+    float GetPriorityFromDistanceAndAngle(float sqrDistanceFromPlayer, float angleFromPlayerForward)
+    {
+        return sqrDistanceFromPlayer * 0.1f + angleFromPlayerForward * angleFromPlayerForward;
     }
 
     /// <summary>
@@ -103,6 +119,7 @@ public class LandscapeWorker
                 Landscape land = PopLandscape();
                 if (land != null)
                 {
+                    land.isGeneratingMesh = true;
                     land.GetLandscapeData().GenerateMesh(land.GetLandscapeData().nextLOD);
 
                     if (!land.initialized)
@@ -112,6 +129,7 @@ public class LandscapeWorker
 
                     land.isDirty = true;
                     land.isInQueue = false;
+                    land.isGeneratingMesh = false;
                 }
                 else
                 {

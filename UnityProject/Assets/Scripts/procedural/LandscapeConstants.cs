@@ -8,7 +8,6 @@ public class LandscapeConstants {
     public const int VERTEX_PER_SIDE = 201;
     public const float LANDSCAPE_SIZE = 100.0f;
 
-    // TODO : we need LOD_MAX
     public const int LOD_MAX = 10;
 
     public static readonly Interval HEIGHT_INTERVAL = new Interval(-100, 100);
@@ -41,11 +40,11 @@ public class LandscapeConstants {
     /// Minimum map diameter
     /// MUST be an ODD number
     /// </summary>
-    public const int MIN_MAP_SIZE = 3;
+    public const int MIN_MAP_SIZE = 10;
 
     /// <summary>
     /// Maximum map diameter
     /// MUST be an ODD number
     /// </summary>
-    public const int MAX_MAP_SIZE = 5;
+    public const int MAX_MAP_SIZE = 20;
 }

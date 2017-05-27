@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel;
+using Priority_Queue;
 using SardineTools;
 using UnityEngine;
 
-public class Landscape : MonoBehaviour
+public class Landscape : FastPriorityQueueNode
 {
     /// <summary>
     /// Holds the mesh data 
@@ -35,6 +36,11 @@ public class Landscape : MonoBehaviour
         get;
         private set;
     }
+
+    /// <summary>
+    /// Worker threads set this to true when this landscape is updating its mesh
+    /// </summary>
+    public bool isGeneratingMesh = false;
 
     public string cachedName {
         get;
@@ -86,6 +92,12 @@ public class Landscape : MonoBehaviour
             renderer.material.mainTexture = generatedTexture;
             
         }
+    }
+
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.Lerp(Color.red, Color.green, landscapeData.nextLOD / (float) LandscapeConstants.LOD_MAX);
+        Gizmos.DrawCube(transform.position, LandscapeConstants.LANDSCAPE_SIZE * 0.9f * new Vector3(1, 1, 1));
     }
 
     public LandscapeData GetLandscapeData()
