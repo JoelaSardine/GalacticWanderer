@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class LandscapeMap
 {
-	/// <summary>GameObject that contains all Landscapes in the scene.</summary>
-    private Transform parent;
 	private LinkedList<LinkedList<Landscape>> map;
 
 	/// <summary>Always must be an odd value.</summary>
@@ -14,21 +12,11 @@ public class LandscapeMap
         private set;
     }
 
-    private int atlasHeight;
-    private int atlasWidth;
-    private Color[] atlasPixels;
-
-    public LandscapeMap(GameObject root, Texture2D atlasTexture)
+    public LandscapeMap()
     {
         // Initialized with a size of 1 then grow until we reach a size of
         // MIN_VIEW_RADIUS
         size = 1;
-        parent = root.transform;
-
-		// Copy atlas texture's pixels
-		atlasPixels = atlasTexture.GetPixels();
-		atlasWidth = atlasTexture.width;
-		atlasHeight = atlasTexture.height;
 
 		map = new LinkedList<LinkedList<Landscape>>();
         map.AddFirst(new LinkedList<Landscape>());
@@ -250,16 +238,12 @@ public class LandscapeMap
 
     private Landscape InstanciateLandscape(Vector3 pos)
     {
-        string name = "Land " + (pos.x / LandscapeConstants.LANDSCAPE_SIZE) + " " + (pos.z / LandscapeConstants.LANDSCAPE_SIZE);
-        GameObject go = new GameObject(name);
-        go.transform.SetParent(parent);
-        go.transform.position = pos;
-
-        // Get the created landscape and bind atlas texture to it
-        Landscape l = go.AddComponent<Landscape>();
-        l.GetLandscapeData().BindAtlasPixels(atlasPixels, atlasWidth, atlasHeight);
-        l.GetLandscapeData().BindPosition(l.transform.position);
-
+        Landscape l = LandscapePool.Borrow(pos);
+        if (map == null)
+        {
+            Debug.LogError("LandscapePool returned a null landscape. LandscapePool is full !");
+        }
+        
         return l;
     }
 

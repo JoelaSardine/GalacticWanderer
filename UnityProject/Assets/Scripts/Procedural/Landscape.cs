@@ -55,6 +55,16 @@ public class Landscape : FastPriorityQueueNode
         landscapeData = new LandscapeData();
     }
 
+    public void ResetState()
+    {
+        initialized = false;
+        isDirty = false;
+        isInQueue = false;
+        isGeneratingMesh = false;
+        workerIndex = -1;
+        landscapeData.nextLOD = -1;
+    }
+
     void Awake()
     {
         mesh = gameObject.AddComponent<MeshFilter>().mesh;

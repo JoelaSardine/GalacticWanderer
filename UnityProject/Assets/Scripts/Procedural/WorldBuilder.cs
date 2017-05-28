@@ -53,8 +53,11 @@ public class WorldBuilder : MonoBehaviour
         // Initialize last discrete position with current postion
         lastDiscretePos = WorldToDiscretePosition(playerTransform.position);
 
+        // Initialize Landscape pool
+        LandscapePool.InitializeLandscapePool(atlasTexture.GetPixels(), atlasTexture.width, atlasTexture.height, gameObject.transform);
+        
         // Generate first batch of landscapes
-        landMap = new LandscapeMap(gameObject, atlasTexture);
+        landMap = new LandscapeMap();
     }
 
     void Update()

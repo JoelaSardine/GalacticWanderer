@@ -36,7 +36,7 @@ public class LandscapeTrash {
             }
             else
             {
-                GameObject.Destroy(l.gameObject);
+                LandscapePool.Release(l);
             }
         }
 

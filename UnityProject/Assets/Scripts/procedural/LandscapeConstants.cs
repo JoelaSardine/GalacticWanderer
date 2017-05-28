@@ -47,4 +47,6 @@ public class LandscapeConstants {
     /// MUST be an ODD number
     /// </summary>
     public const int MAX_MAP_SIZE = 13;
+
+    public const int LANDSCAPE_POOL_SIZE = 200;
 }
