@@ -6,13 +6,17 @@ public class CameraFollowPlayer : MonoBehaviour
 
     public Transform player;
 
+	Rigidbody playerRB;
+
     //GameStateManager gameStateManagerScript;
     Camera cam;
 
     Vector3 lookAtposition;
     Transform TargetPosition;
 
-    ParticleSystem speedFx;
+	float distOffset;
+
+    //ParticleSystem speedFx;
 
     void Awake()
     {
@@ -22,20 +26,34 @@ public class CameraFollowPlayer : MonoBehaviour
         TargetPosition = PosTarget.transform;
         TargetPosition.position = transform.position;
         TargetPosition.SetParent(player);
-        speedFx = transform.GetChild(0).GetComponent<ParticleSystem>();
+		//speedFx = transform.GetChild(0).GetComponent<ParticleSystem>();
+
+		playerRB = player.GetComponent<Rigidbody>();
+		distOffset = Vector3.Distance(transform.position, player.position);
 
     }
 
-    void FixedUpdate ()
+    void Update ()
     {
-        transform.position = Vector3.Lerp(transform.position, TargetPosition.position, Time.deltaTime * 8);
-        transform.LookAt(player);
+		if (playerRB.velocity != Vector3.zero)
+		{
+			transform.position = player.position - playerRB.velocity.normalized * distOffset;
+			transform.LookAt(transform.position + playerRB.velocity.normalized * distOffset, player.up);
+			transform.position += transform.up * 5.0f;
+		}
 
-        //cam.fieldOfView = Mathf.Lerp(50, 100, gameStateManagerScript.playerCurrentSpeed);
-
-        ParticleSystem.EmissionModule emmMod = speedFx.emission;
-        //emmMod.rate = Mathf.Lerp(-50, 50, gameStateManagerScript.playerCurrentSpeed);
+		//transform.position = Vector3.Lerp(transform.position, TargetPosition.position, Time.deltaTime * 6);
+		//transform.rotation = Quaternion.Lerp(transform.rotation, TargetPosition.rotation, Time.deltaTime * 6);
 
 
-    }
+
+		//transform.LookAt(player);
+
+		//cam.fieldOfView = Mathf.Lerp(50, 100, gameStateManagerScript.playerCurrentSpeed);
+
+		//ParticleSystem.EmissionModule emmMod = speedFx.emission;
+		//emmMod.rate = Mathf.Lerp(-50, 50, gameStateManagerScript.playerCurrentSpeed);
+
+
+	}
 }
