@@ -13,13 +13,14 @@ public class LandscapeConstants {
     public static readonly Interval HEIGHT_INTERVAL = new Interval(-100, 100);
     public static readonly Interval[] BIOMES_HEIGHT =
     {
-        new Interval(-100, -80),
-        new Interval(-80, -55),
-        new Interval(-55, -25),
-        new Interval(-25, 10),
-        new Interval(10, 50),
-        new Interval(50, 200)
+        new Interval(-100, -95),
+        new Interval(-95, -70),
+        new Interval(-70, -50),
+        new Interval(-50, -5),
+        new Interval(-5, 35),
+        new Interval(35, 200)
     };
+	public const float BLEND_RANGE = 2.5f;
 
     public const int ATLAS_LINES = 2;
     public const int ATLAS_COLUMNS = 3;

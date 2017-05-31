@@ -160,6 +160,7 @@ public class LandscapeData {
 					for (int index = 0; index < LandscapeConstants.BIOMES_HEIGHT.Length; index++)
 					{
 						Interval interval = LandscapeConstants.BIOMES_HEIGHT[index];
+
 						if (interval.Contains(altitude))
 						{
 							int column = index % LandscapeConstants.ATLAS_COLUMNS;
@@ -167,25 +168,78 @@ public class LandscapeData {
 
 							float cellX = atlasCellWidth * j / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
 							float cellY = atlasCellHeight * i / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
+
 							int pixX = (int)(column * atlasCellWidth + cellX);
 							int pixY = (int)(line * atlasCellHeight + cellY);
 							if (pixY * atlasWidth + pixX >= atlasPixels.Length)
 							{
-								sb.AppendLine("TOO HIGH : trying to get pixel " 
+								sb.AppendLine("TOO HIGH : trying to get pixel "
 									+ pixY + " * " + atlasWidth + " + " + pixX + " = "
 									+ (pixY * atlasWidth + pixX)
 									+ " but atlas size is " + atlasPixels.Length);
 								break;
 							}
+
 							Color pixel = atlasPixels[pixY * atlasWidth + pixX];
+
 							if (i * LandscapeConstants.TEXTURE_RESOLUTION + j >= pixels.Length)
 							{
-								sb.AppendLine("TOO HIGH : trying to set pixel " 
+								sb.AppendLine("TOO HIGH : trying to set pixel "
 									+ i + " * " + LandscapeConstants.TEXTURE_RESOLUTION + " + " + j + " = "
 									+ (i * LandscapeConstants.TEXTURE_RESOLUTION + j)
 									+ " but array size is " + pixels.Length);
 								break;
 							}
+
+							if (index < LandscapeConstants.BIOMES_HEIGHT.Length - 1 && interval.max - altitude < LandscapeConstants.BLEND_RANGE)
+							{
+								// Blend with superior
+								int nextColumn = (index + 1) % LandscapeConstants.ATLAS_COLUMNS;
+								int nextLine = Mathf.FloorToInt((index + 1) / (float)(LandscapeConstants.ATLAS_LINES + 1));
+
+								int nextPixX = (int)(nextColumn * atlasCellWidth + cellX);
+								int nextPixY = (int)(nextLine * atlasCellHeight + cellY);
+								if (nextPixY * atlasWidth + nextPixX >= atlasPixels.Length)
+								{
+									sb.AppendLine("TOO HIGH : trying to get pixel "
+										+ nextPixY + " * " + atlasWidth + " + " + nextPixX + " = "
+										+ (nextPixY * atlasWidth + nextPixX)
+										+ " but atlas size is " + atlasPixels.Length);
+									break;
+								}
+
+								Color nextPixel = atlasPixels[nextPixY * atlasWidth + nextPixX];
+
+								float diff = (interval.max - altitude) / LandscapeConstants.BLEND_RANGE;
+								pixel = Blend(pixel, nextPixel, (diff + 1) / 2.0f);
+							}
+							else if (index > 0 && altitude - interval.min < LandscapeConstants.BLEND_RANGE)
+							{
+								// Blend with superior
+								int prevColumn = (index - 1) % LandscapeConstants.ATLAS_COLUMNS;
+								int prevLine = Mathf.FloorToInt((index - 1) / (float)(LandscapeConstants.ATLAS_LINES + 1));
+
+								int prevPixX = (int)(prevColumn * atlasCellWidth + cellX);
+								int prevPixY = (int)(prevLine * atlasCellHeight + cellY);
+								if (prevPixY * atlasWidth + prevPixX >= atlasPixels.Length)
+								{
+									sb.AppendLine("TOO HIGH : trying to get pixel "
+										+ prevPixY + " * " + atlasWidth + " + " + prevPixX + " = "
+										+ (prevPixY * atlasWidth + prevPixX)
+										+ " but atlas size is " + atlasPixels.Length);
+									break;
+								}
+
+								Color prevPixel = atlasPixels[prevPixY * atlasWidth + prevPixX];
+
+								float diff = (altitude - interval.min) / LandscapeConstants.BLEND_RANGE;
+								pixel = Blend(pixel, prevPixel, (diff + 1) / 2.0f);
+							}
+							else
+							{
+								// Don't blend
+							}
+							
 							pixels[i * LandscapeConstants.TEXTURE_RESOLUTION + j] = pixel;
 							break;
 						}
@@ -208,5 +262,14 @@ public class LandscapeData {
 				Debug.LogError("AtlasPixels is null for landscape at " + position);
 			}
 		}
+	}
+
+	private Color Blend(Color c1, Color c2, float percent)
+	{
+		Color c = new Color();
+		c.r = percent * c1.r + (1 - percent) * c2.r;
+		c.g = percent * c1.g + (1 - percent) * c2.g;
+		c.b = percent * c1.b + (1 - percent) * c2.b;
+		return c;
 	}
 }
