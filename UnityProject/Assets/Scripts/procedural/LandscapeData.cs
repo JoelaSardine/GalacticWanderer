@@ -92,7 +92,7 @@ public class LandscapeData {
             {
                 float x = currentWidth / (float)(vertexW - 1) * LandscapeConstants.LANDSCAPE_SIZE;
                 float y = currentHeight / (float)(vertexH - 1) * LandscapeConstants.LANDSCAPE_SIZE;
-                float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeConstants.NOISE.GetNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
+                float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeNoises.GetNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
 
                 vertices[currentHeight * vertexW + currentWidth].Set(x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f, altitude, y - LandscapeConstants.LANDSCAPE_SIZE / 2.0f);
 
@@ -155,7 +155,7 @@ public class LandscapeData {
 				{
 					float x = j / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1) * LandscapeConstants.LANDSCAPE_SIZE;
 					float y = i / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1) * LandscapeConstants.LANDSCAPE_SIZE;
-					float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeConstants.NOISE.GetNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
+					float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeNoises.GetNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
 
 					for (int index = 0; index < LandscapeConstants.BIOMES_HEIGHT.Length; index++)
 					{
