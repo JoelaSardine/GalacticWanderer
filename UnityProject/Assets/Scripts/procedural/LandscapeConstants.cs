@@ -10,15 +10,15 @@ public class LandscapeConstants {
 
     public const int LOD_MAX = 10;
 
-    public static readonly Interval HEIGHT_INTERVAL = new Interval(0, 100);
+    public static readonly Interval HEIGHT_INTERVAL = new Interval(0, 75);
     public static readonly Interval[] BIOMES_HEIGHT =
     {
-        new Interval(-20, 0),
+        new Interval(-10, 0),
         new Interval(0, 1),
-        new Interval(1, 5),
-        new Interval(5, 20),
-        new Interval(20, 50),
-        new Interval(50, 200)
+        new Interval(1, 3),
+        new Interval(3, 33),
+        new Interval(33, 60),
+        new Interval(60, 200)
     };
 	public const float BLEND_RANGE = 2.5f;
 

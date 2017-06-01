@@ -4,6 +4,14 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
+public enum FilterFunction
+{
+    EXP,
+    LOG,
+    GAMMA,
+    DEFAULT
+}
+
 [Serializable]
 public struct NoiseData
 {
@@ -17,6 +25,9 @@ public class LandscapeNoises : MonoBehaviour
 {
     private static LandscapeNoises instance;
     public NoiseData[] noiseDataList;
+    public FilterFunction filter;
+    public int a;
+    public float b;
 
     public void Start()
     {
@@ -35,7 +46,20 @@ public class LandscapeNoises : MonoBehaviour
         {
             result += noiseData.weight * noiseData.currentNoise.GetNoise(noiseData.frequency.x * x, noiseData.frequency.y * y);
         }
-        return result;
+        switch (filter)
+        {
+            case FilterFunction.EXP:
+                return Mathf.Pow(result, a); // interessant
+            case FilterFunction.LOG:
+                return Mathf.Log(1 + result);
+            case FilterFunction.GAMMA:
+                return Mathf.Gamma(result, a, b);
+            case FilterFunction.DEFAULT:
+                return result;
+            default:
+                return result;
+    }
+        
     }
 
     public static float GetNoise(float x, float y)
