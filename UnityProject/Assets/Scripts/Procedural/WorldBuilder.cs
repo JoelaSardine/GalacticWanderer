@@ -15,6 +15,10 @@ public class WorldBuilder : MonoBehaviour
     LandscapeMap landMap;
     List<Thread> threadPool;
     List<LandscapeWorker> workers;
+    public Texture2D biomeMap;
+    public static float biomeMapHeight;
+    public static float biomeMapWidth;
+    public static Color[] biomeMapPixels;
 
     float LODRadius = 100.0f;
 
@@ -53,6 +57,9 @@ public class WorldBuilder : MonoBehaviour
         // Initialize last discrete position with current postion
         lastDiscretePos = WorldToDiscretePosition(playerTransform.position);
 
+        // Fill biomeMapColor from the biomeMap image
+        FillBiomeMapData();
+
         // Generate first batch of landscapes
         landMap = new LandscapeMap(gameObject, atlasTexture);
     }
@@ -62,6 +69,13 @@ public class WorldBuilder : MonoBehaviour
         UpdateMap();
         UpdateLODs();
         LandscapeTrash.Flush();
+    }
+
+    void FillBiomeMapData()
+    {
+        biomeMapWidth = biomeMap.width;
+        biomeMapHeight = biomeMap.height;
+        biomeMapPixels = biomeMap.GetPixels();
     }
 
     Vector3 WorldToDiscretePosition(Vector3 v)

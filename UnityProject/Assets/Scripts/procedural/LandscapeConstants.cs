@@ -10,6 +10,7 @@ public class LandscapeConstants {
 
     public const int LOD_MAX = 10;
 
+    // NO NEGATIVE !
     public static readonly Interval HEIGHT_INTERVAL = new Interval(0, 75);
     public static readonly Interval[] BIOMES_HEIGHT =
     {
@@ -24,7 +25,7 @@ public class LandscapeConstants {
 
     public const int ATLAS_LINES = 2;
     public const int ATLAS_COLUMNS = 3;
-    public const int TEXTURE_RESOLUTION = 1024;
+    public const int TEXTURE_RESOLUTION = 256;
 
     public static FastNoise NOISE = new FastNoise(1337);
 

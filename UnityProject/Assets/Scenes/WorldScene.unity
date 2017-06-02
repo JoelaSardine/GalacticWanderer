@@ -191,6 +191,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   atlasTexture: {fileID: 2800000, guid: 0244cda00e24b6e41b0a4f234e544c13, type: 3}
   showDebug: 0
+  biomeMap: {fileID: 2800000, guid: 02e94bccb37ae9143b020eca8c81ac5f, type: 3}
 --- !u!114 &824755681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -202,16 +203,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0397acb85dfc1e4d85d0e629e2a2f07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  noiseDataList:
-  - frequency: {x: 3, y: 3}
-    weight: 5
-    seed: 312456
-  - frequency: {x: 6, y: 3}
-    weight: 4.5
-    seed: 945768
-  - frequency: {x: 3, y: 6}
-    weight: 4.5
-    seed: 465725
+  elevationNoiseList:
+  - frequency: {x: 1, y: 1}
+    weight: 1
+    seed: 50000
+  moistureNoiseList:
+  - frequency: {x: 1, y: 1}
+    weight: 1
+    seed: 50000
+  filter: 1
+  a: 0
+  b: 0
 --- !u!1 &910424512
 GameObject:
   m_ObjectHideFlags: 0

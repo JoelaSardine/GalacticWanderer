@@ -92,7 +92,7 @@ public class LandscapeData {
             {
                 float x = currentWidth / (float)(vertexW - 1) * LandscapeConstants.LANDSCAPE_SIZE;
                 float y = currentHeight / (float)(vertexH - 1) * LandscapeConstants.LANDSCAPE_SIZE;
-                float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeNoises.GetNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
+                float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeNoises.GetElevationNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
 
                 vertices[currentHeight * vertexW + currentWidth].Set(x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f, altitude, y - LandscapeConstants.LANDSCAPE_SIZE / 2.0f);
 
@@ -142,113 +142,32 @@ public class LandscapeData {
     // Pre : mesh already generated
     public void GenerateTexture()
     {
+        for(int i = 0; i < pixels.Length; ++i)
+        {
+            pixels[i] = Color.red;
+        }
 		if (pixels != null || atlasPixels != null)
 		{
-			System.Text.StringBuilder sb = new System.Text.StringBuilder();
-
-			float atlasCellWidth = atlasWidth / (float)LandscapeConstants.ATLAS_COLUMNS;
-			float atlasCellHeight = atlasHeight / (float)LandscapeConstants.ATLAS_LINES;
-
 			for (int i = 0; i < LandscapeConstants.TEXTURE_RESOLUTION; i++)
 			{
 				for (int j = 0; j < LandscapeConstants.TEXTURE_RESOLUTION; j++)
 				{
+                    Interval moistureInterval = new Interval(0, LandscapeNoises.GetMaxMoisture());
 					float x = j / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1) * LandscapeConstants.LANDSCAPE_SIZE;
 					float y = i / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1) * LandscapeConstants.LANDSCAPE_SIZE;
-					float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeNoises.GetNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
-
-					for (int index = 0; index < LandscapeConstants.BIOMES_HEIGHT.Length; index++)
-					{
-						Interval interval = LandscapeConstants.BIOMES_HEIGHT[index];
-
-						if (interval.Contains(altitude))
-						{
-							int column = index % LandscapeConstants.ATLAS_COLUMNS;
-							int line = Mathf.FloorToInt(index / (float)(LandscapeConstants.ATLAS_LINES + 1));
-
-							float cellX = atlasCellWidth * j / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
-							float cellY = atlasCellHeight * i / (float)(LandscapeConstants.TEXTURE_RESOLUTION - 1);
-
-							int pixX = (int)(column * atlasCellWidth + cellX);
-							int pixY = (int)(line * atlasCellHeight + cellY);
-							if (pixY * atlasWidth + pixX >= atlasPixels.Length)
-							{
-								sb.AppendLine("TOO HIGH : trying to get pixel "
-									+ pixY + " * " + atlasWidth + " + " + pixX + " = "
-									+ (pixY * atlasWidth + pixX)
-									+ " but atlas size is " + atlasPixels.Length);
-								break;
-							}
-
-							Color pixel = atlasPixels[pixY * atlasWidth + pixX];
-
-							if (i * LandscapeConstants.TEXTURE_RESOLUTION + j >= pixels.Length)
-							{
-								sb.AppendLine("TOO HIGH : trying to set pixel "
-									+ i + " * " + LandscapeConstants.TEXTURE_RESOLUTION + " + " + j + " = "
-									+ (i * LandscapeConstants.TEXTURE_RESOLUTION + j)
-									+ " but array size is " + pixels.Length);
-								break;
-							}
-
-							if (index < LandscapeConstants.BIOMES_HEIGHT.Length - 1 && interval.max - altitude < LandscapeConstants.BLEND_RANGE)
-							{
-								// Blend with superior
-								int nextColumn = (index + 1) % LandscapeConstants.ATLAS_COLUMNS;
-								int nextLine = Mathf.FloorToInt((index + 1) / (float)(LandscapeConstants.ATLAS_LINES + 1));
-
-								int nextPixX = (int)(nextColumn * atlasCellWidth + cellX);
-								int nextPixY = (int)(nextLine * atlasCellHeight + cellY);
-								if (nextPixY * atlasWidth + nextPixX >= atlasPixels.Length)
-								{
-									sb.AppendLine("TOO HIGH : trying to get pixel "
-										+ nextPixY + " * " + atlasWidth + " + " + nextPixX + " = "
-										+ (nextPixY * atlasWidth + nextPixX)
-										+ " but atlas size is " + atlasPixels.Length);
-									break;
-								}
-
-								Color nextPixel = atlasPixels[nextPixY * atlasWidth + nextPixX];
-
-								float diff = (interval.max - altitude) / LandscapeConstants.BLEND_RANGE;
-								pixel = Blend(pixel, nextPixel, (diff + 1) / 2.0f);
-							}
-							else if (index > 0 && altitude - interval.min < LandscapeConstants.BLEND_RANGE)
-							{
-								// Blend with superior
-								int prevColumn = (index - 1) % LandscapeConstants.ATLAS_COLUMNS;
-								int prevLine = Mathf.FloorToInt((index - 1) / (float)(LandscapeConstants.ATLAS_LINES + 1));
-
-								int prevPixX = (int)(prevColumn * atlasCellWidth + cellX);
-								int prevPixY = (int)(prevLine * atlasCellHeight + cellY);
-								if (prevPixY * atlasWidth + prevPixX >= atlasPixels.Length)
-								{
-									sb.AppendLine("TOO HIGH : trying to get pixel "
-										+ prevPixY + " * " + atlasWidth + " + " + prevPixX + " = "
-										+ (prevPixY * atlasWidth + prevPixX)
-										+ " but atlas size is " + atlasPixels.Length);
-									break;
-								}
-
-								Color prevPixel = atlasPixels[prevPixY * atlasWidth + prevPixX];
-
-								float diff = (altitude - interval.min) / LandscapeConstants.BLEND_RANGE;
-								pixel = Blend(pixel, prevPixel, (diff + 1) / 2.0f);
-							}
-							else
-							{
-								// Don't blend
-							}
-							
-							pixels[i * LandscapeConstants.TEXTURE_RESOLUTION + j] = pixel;
-							break;
-						}
-					}
+					float altitude = LandscapeConstants.HEIGHT_INTERVAL.Lerp(LandscapeNoises.GetElevationNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
+                    float altitudeAlpha = altitude / LandscapeConstants.HEIGHT_INTERVAL.max;
+                    float moisture = moistureInterval.Lerp(LandscapeNoises.GetMoistureNoise(position.x - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + x, position.z - LandscapeConstants.LANDSCAPE_SIZE / 2.0f + y));
+                    float column = moisture * WorldBuilder.biomeMapWidth;
+                    float line = altitudeAlpha * WorldBuilder.biomeMapHeight;
+                    if ((int)(line * WorldBuilder.biomeMapWidth + column) < WorldBuilder.biomeMapPixels.Length && (int)(line * WorldBuilder.biomeMapWidth + column) >= 0)
+                    {
+                        Color color = WorldBuilder.biomeMapPixels[(int)(line * WorldBuilder.biomeMapWidth + column)];
+                        if((int)(i * LandscapeConstants.TEXTURE_RESOLUTION + j) < pixels.Length && (int)(i * LandscapeConstants.TEXTURE_RESOLUTION + j) >= 0)
+                        pixels[(int)(i * LandscapeConstants.TEXTURE_RESOLUTION + j)] = color;
+                    }
+                    
 				}
-			}
-			if (sb.Length > 0)
-			{
-				Debug.LogError(sb);
 			}
 		}
 		else
